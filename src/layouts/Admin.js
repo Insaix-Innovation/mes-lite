@@ -76,6 +76,7 @@ const Admin = (props) => {
           {...props}
           brandText={getBrandText(props?.location?.pathname)}
         />
+
         <Routes>
           {getRoutes(routes)}
           <Route path="*" element={<Navigate to="/admin/index" replace />} />

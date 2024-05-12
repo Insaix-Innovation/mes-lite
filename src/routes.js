@@ -5,6 +5,8 @@ import Register from "views/examples/Register.js";
 import Login from "views/Login.js";
 import Tables from "views/examples/Tables.js";
 import Icons from "views/examples/Icons.js";
+import Summary from "views/Summary.js";
+import Machine from "views/Machine.js";
 
 var routes = [
   {
@@ -12,6 +14,20 @@ var routes = [
     name: "Dashboard",
     icon: "ni ni-tv-2 text-primary",
     component: <Index />,
+    layout: "/admin",
+  },
+  {
+    path: "/summary",
+    name: "Summary",
+    icon: "ni ni-align-center text-primary",
+    component: <Summary />,
+    layout: "/admin",
+  },
+  {
+    path: "/machine",
+    name: "Machine",
+    icon: "ni ni-settings text-primary",
+    component: <Machine />,
     layout: "/admin",
   },
   {
