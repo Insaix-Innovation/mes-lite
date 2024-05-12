@@ -35,7 +35,7 @@ var routes = [
   {
     path: "/summary",
     name: "Summary",
-    icon: "ni ni-left-2 text-primary",
+    icon: "ni ni-align-center text-primary",
     component: <Summary />,
     layout: "/admin",
   },
