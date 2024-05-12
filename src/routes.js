@@ -7,33 +7,34 @@ import Tables from "views/examples/Tables.js";
 import Icons from "views/examples/Icons.js";
 import Summary from "views/Summary.js";
 import Machine from "views/Machine.js";
+import Performance from "views/Performance.js";
 
 var routes = [
   {
     path: "/index",
     name: "Dashboard",
-    icon: "ni ni-tv-2 text-primary",
+    icon: "ni ni-tv-2 text-white",
     component: <Index />,
     layout: "/admin",
   },
   {
     path: "/summary",
     name: "Summary",
-    icon: "ni ni-align-center text-primary",
+    icon: "ni ni-align-center text-white",
     component: <Summary />,
     layout: "/admin",
   },
   {
     path: "/machine",
     name: "Machine",
-    icon: "ni ni-settings text-primary",
+    icon: "ni ni-settings text-white",
     component: <Machine />,
     layout: "/admin",
   },
   {
     path: "/icons",
     name: "Icons",
-    icon: "ni ni-planet text-blue",
+    icon: "ni ni-planet text-white",
     component: <Icons />,
     layout: "/admin",
   },
@@ -76,6 +77,13 @@ var routes = [
     path: "/utilization",
     name: "Utilization",
     icon: "ni ni-calendar-grid-58 text-black",
+    layout: "/admin",
+  },
+  {
+    path: "/performance",
+    name: "Performance",
+    icon: "ni ni-watch-time text-white",
+    component: <Performance />,
     layout: "/admin",
   }
 ];
