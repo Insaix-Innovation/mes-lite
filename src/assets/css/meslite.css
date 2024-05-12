@@ -1,4 +1,12 @@
-.tableHeader th{
-    font-weight: bold;
-    color: black;
+.tableHeader th {
+	font-weight: bold;
+	color: black;
+}
+
+.logout {
+	display: flex;
+	align-items: center;
+	color: rgb(161, 161, 161);
+	position: absolute;
+	bottom: 30px;
 }

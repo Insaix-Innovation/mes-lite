@@ -13,13 +13,6 @@ import Quality from "views/Quality.js";
 
 var routes = [
 	{
-		path: "/index",
-		name: "Dashboard",
-		icon: "ni ni-tv-2 text-white",
-		component: <Index />,
-		layout: "/admin",
-	},
-	{
 		path: "/summary",
 		name: "Summary",
 		icon: "ni ni-align-center text-white",
@@ -36,14 +29,14 @@ var routes = [
 	{
 		path: "/login",
 		name: "Login",
-		icon: "ni ni-key-25 text-info",
+		icon: "ni ni-key-25 text-white",
 		component: <Login />,
 		layout: "/auth",
 	},
 	{
 		path: "/utilization",
 		name: "Utilization",
-		icon: "ni ni-calendar-grid-58 text-black",
+		icon: "ni ni-spaceship text-white",
 		component: <Utilization />,
 		layout: "/admin",
 	},
@@ -57,7 +50,7 @@ var routes = [
 	{
 		path: "/quality",
 		name: "Quality",
-		icon: "ni ni-watch-time text-white",
+		icon: "ni ni-sound-wave text-white",
 		component: <Quality />,
 		layout: "/admin",
 	},
