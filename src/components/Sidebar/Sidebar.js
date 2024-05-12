@@ -56,6 +56,7 @@ var ps;
 
 const Sidebar = (props) => {
 	const [collapseOpen, setCollapseOpen] = useState();
+
 	// verifies if routeName is the one active (in browser input)
 	const activeRoute = (routeName) => {
 		return props.location.pathname.indexOf(routeName) > -1 ? "active" : "";
@@ -221,9 +222,8 @@ const Sidebar = (props) => {
 					{/* Collapse header */}
 					<div className="navbar-collapse-header d-md-none">
 						<Row>
-							{logo ? (
-								<Col className="collapse-brand" xs="6">
-									{logo.innerLink ? (
+							<Col className="collapse-brand" xs="6">
+								{/* {logo.innerLink ? (
 										<Link to={logo.innerLink}>
 											<img
 												alt={logo.imgAlt}
@@ -237,9 +237,25 @@ const Sidebar = (props) => {
 												src={logo.imgSrc}
 											/>
 										</a>
-									)}
-								</Col>
-							) : null}
+									)} */}
+								<Link to={logo.innerLink}>
+									<h1
+										style={{
+											color: "white",
+											fontWeight: "bold",
+											margin: "30px 0 20px",
+											backgroundColor: "#120639",
+											width: "fit-content",
+											padding: "0 10px",
+										}}
+									>
+										<span style={{ color: "#44a2f8" }}>
+											MES
+										</span>{" "}
+										Lite
+									</h1>
+								</Link>
+							</Col>
 							<Col className="collapse-close" xs="6">
 								<button
 									className="navbar-toggler"
@@ -252,24 +268,37 @@ const Sidebar = (props) => {
 							</Col>
 						</Row>
 					</div>
-					{/* Form */}
-					<Form className="mt-4 mb-3 d-md-none">
-						<InputGroup className="input-group-rounded input-group-merge">
-							<Input
-								aria-label="Search"
-								className="form-control-rounded form-control-prepended"
-								placeholder="Search"
-								type="search"
-							/>
-							<InputGroupAddon addonType="prepend">
-								<InputGroupText>
-									<span className="fa fa-search" />
-								</InputGroupText>
-							</InputGroupAddon>
-						</InputGroup>
-					</Form>
 					{/* Navigation */}
-					<Nav navbar>{createLinks(routes)}</Nav>
+					<Nav navbar>
+						{createLinks(routes)}
+						<div className="logoutCollapse btn">
+							<NavLink
+								to="/auth/login"
+								tag={NavLinkRRD}
+								onClick={closeCollapse}
+								style={{ color: "white", fontWeight: "600" }}
+							>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									width="16"
+									height="16"
+									fill="currentColor"
+									class="bi bi-box-arrow-in-right"
+									viewBox="0 0 16 16"
+								>
+									<path
+										fill-rule="evenodd"
+										d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5 1.5 0 0 0 6.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-8A1.5 1.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0z"
+									/>
+									<path
+										fill-rule="evenodd"
+										d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"
+									/>
+								</svg>
+								<span className="ml-2">Log Out</span>
+							</NavLink>
+						</div>
+					</Nav>
 				</Collapse>
 				<div className="logout">
 					<span className="mr-2">
