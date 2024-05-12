@@ -87,7 +87,8 @@ const Login = () => {
 									value="stay"
 									className="my-4"
 								/>
-								<Label for="stayLogged">Stay Logged In</Label>
+								<span> </span>
+								<Label for="stayLogged"> Stay Logged In</Label>
 							</div>
 
 							<div
@@ -107,7 +108,7 @@ const Login = () => {
 									padding: "5px",
 								}}
 							>
-								<span>Don't have an account?</span>
+								<span>Don't have an account? </span>
 								<a href="#">Contact us</a>
 							</div>
 						</Form>
