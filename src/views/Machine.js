@@ -56,12 +56,9 @@ const Summary = (props) => {
         <>
             <div className="header pb-8 pt-5 pt-md-8">
                 <Container fluid>
-                    <div className="header-body">
-
-                    </div>
-                </Container>
-            </div>
-            <Container className="mt--7" fluid>
+                    
+              
+            
                 <Row>
                     <Col className="mb-5 mb-xl-0" xl="8">
                         <Card >
@@ -175,8 +172,9 @@ const Summary = (props) => {
                         </Card>
                     </Col>
                 </Row>
-
-            </Container>
+                </Container>
+            </div>
+            
         </>
     );
 };
