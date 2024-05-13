@@ -25,6 +25,7 @@ const Login = () => {
 					style={{
 						backgroundColor: "rgba(255, 255, 255, 0.5)",
 						width: "65%",
+						maxWidth: "1000px",
 						padding: "30px 50px",
 						height: "500px",
 					}}

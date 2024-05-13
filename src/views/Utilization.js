@@ -15,6 +15,7 @@ import {
 } from "reactstrap";
 import { Bar, Line, Pie, Doughnut, HorizontalBar } from "react-chartjs-2";
 import React, { useState } from "react";
+import Pagination from "components/Pagination";
 
 const Utilization = (props) => {
 	// Sample data for the chart
@@ -75,6 +76,26 @@ const Utilization = (props) => {
 	};
 
 	const sampleData = [
+		{
+			machine: "Machine 1",
+			date: "2024-05-01",
+			startTime: "08:00 AM",
+			endTime: "04:00 PM",
+			runTime: "7 hours",
+			downTime: "1 hour",
+			breakRest: "0.5 hour",
+			utilization: "85%",
+		},
+		{
+			machine: "Machine 1",
+			date: "2024-05-01",
+			startTime: "08:00 AM",
+			endTime: "04:00 PM",
+			runTime: "7 hours",
+			downTime: "1 hour",
+			breakRest: "0.5 hour",
+			utilization: "85%",
+		},
 		{
 			machine: "Machine 1",
 			date: "2024-05-01",
@@ -164,6 +185,13 @@ const Utilization = (props) => {
 		},
 	};
 
+	const [currentPage, setCurrentPage] = useState(1);
+	let pageSize = 4;
+
+	const firstPageIndex = (currentPage - 1) * pageSize;
+	const lastPageIndex = firstPageIndex + pageSize;
+	const currentTableData = sampleData.slice(firstPageIndex, lastPageIndex);
+
 	return (
 		<>
 			<div className="header pb-8 pt-5 pt-md-8">
@@ -216,27 +244,43 @@ const Utilization = (props) => {
 											</tr>
 										</thead>
 										<tbody>
-											{sampleData.map((data, index) => (
-												<tr key={index}>
-													<td>{data.machine}</td>
-													<td>{data.date}</td>
-													<td>{data.startTime}</td>
-													<td>{data.endTime}</td>
-													<td>{data.runTime}</td>
-													<td>{data.downTime}</td>
-													<td>{data.breakRest}</td>
-													<td>{data.utilization}</td>
-												</tr>
-											))}
+											{currentTableData.map(
+												(data, index) => (
+													<tr key={index}>
+														<td>{data.machine}</td>
+														<td>{data.date}</td>
+														<td>
+															{data.startTime}
+														</td>
+														<td>{data.endTime}</td>
+														<td>{data.runTime}</td>
+														<td>{data.downTime}</td>
+														<td>
+															{data.breakRest}
+														</td>
+														<td>
+															{data.utilization}
+														</td>
+													</tr>
+												)
+											)}
 										</tbody>
 										<tr>
 											<td colSpan={8}>
 												<div className="pagination d-flex justify-content-center">
-													<Button>1</Button>
-													<Button>2</Button>
-													<Button>3</Button>
-													<Button>4</Button>
-													<Button>5</Button>
+													<Pagination
+														className="pagination-bar mb-0"
+														currentPage={
+															currentPage
+														}
+														totalCount={
+															sampleData.length
+														}
+														pageSize={pageSize}
+														onPageChange={(page) =>
+															setCurrentPage(page)
+														}
+													/>
 												</div>
 											</td>
 										</tr>

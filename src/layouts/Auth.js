@@ -9,6 +9,8 @@ import AuthFooter from "components/Footers/AuthFooter.js";
 
 import routes from "routes.js";
 
+import background from "../assets/img/brand/background.jpg";
+
 const Auth = (props) => {
 	const mainContent = React.useRef(null);
 	const location = useLocation();
@@ -47,7 +49,13 @@ const Auth = (props) => {
 		<>
 			<div className="bg-primary" ref={mainContent}>
 				{/* Page content */}
-				<div className="vh-100">
+				<div className="" style={{
+							backgroundImage: `url(${background})`, 
+							backgroundSize: "cover", 
+							backgroundPosition: "left",
+							minHeight: "100vh" ,
+							height: "fit-content"
+						}}>
 					<Routes>
 						{getRoutes(routes)}
 						<Route
