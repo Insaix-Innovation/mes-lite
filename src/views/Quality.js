@@ -3,8 +3,8 @@ import classnames from "classnames";
 import pflImage from "../assets/img/pfl.png";
 import { useState } from "react";
 import { Bar, Line, Pie, Doughnut } from "react-chartjs-2";
-import { Badge } from "reactstrap";
 import Pagination from "components/Pagination";
+import { barChartOptions, doughnutOptions } from "./chartOptions.js";
 import {
 	Button,
 	Card,
@@ -21,27 +21,7 @@ import {
 	Table,
 } from "reactstrap";
 
-// core components
-import {
-	chartExample1,
-	chartExample2,
-	chartOptions,
-	parseOptions,
-} from "variables/charts.js";
-
 const Quality = (props) => {
-	const [activeNav, setActiveNav] = useState(1);
-	const [chartExample1Data, setChartExample1Data] = useState("data1");
-
-	if (window.Chart) {
-		parseOptions(Chart, chartOptions());
-	}
-
-	const toggleNavs = (e, index) => {
-		e.preventDefault();
-		setActiveNav(index);
-		setChartExample1Data("data" + index);
-	};
 
 	const barChartData = {
 		labels: ["A", "B", "C", "D", "E", "F", "J", "K", "M"],
@@ -64,39 +44,6 @@ const Quality = (props) => {
 			},
 		],
 		labels: ["Good", "Bad"],
-	};
-
-	const barChartOptions = {
-		maintainAspectRatio: false,
-		scales: {
-			xAxes: [
-				{
-					gridLines: {
-						display: false,
-					},
-				},
-			],
-			yAxes: [
-				{
-					gridLines: {
-						display: false,
-					},
-				},
-			],
-		},
-		elements: {
-			bar: {
-				borderRadius: 20, // Set border radius of bars to 0
-			},
-		},
-	};
-
-	const doughnutOptions = {
-		plugins: {
-			legend: {
-				position: "top", // Place legend at the top
-			},
-		},
 	};
 
 	const sampleData = [
@@ -203,22 +150,24 @@ const Quality = (props) => {
 											</tr>
 										</thead>
 										<tbody>
-											{currentTableData.map((data, index) => (
-												<tr key={index}>
-													<td>{data.machine}</td>
-													<td>{data.date}</td>
-													<td>{data.target}</td>
-													<td>{data.output}</td>
-													<td>{data.good}</td>
-													<td>{data.bad}</td>
-													<td>{data.quality}</td>
-												</tr>
-											))}
+											{currentTableData.map(
+												(data, index) => (
+													<tr key={index}>
+														<td>{data.machine}</td>
+														<td>{data.date}</td>
+														<td>{data.target}</td>
+														<td>{data.output}</td>
+														<td>{data.good}</td>
+														<td>{data.bad}</td>
+														<td>{data.quality}</td>
+													</tr>
+												)
+											)}
 										</tbody>
 										<tr>
 											<td colSpan={7}>
 												<div className="pagination d-flex justify-content-center">
-												<Pagination
+													<Pagination
 														className="pagination-bar mb-0"
 														currentPage={
 															currentPage

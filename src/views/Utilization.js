@@ -16,6 +16,11 @@ import {
 import { Bar, Line, Pie, Doughnut, HorizontalBar } from "react-chartjs-2";
 import React, { useState } from "react";
 import Pagination from "components/Pagination";
+import {
+	barChartOptions,
+	doughnutOptions,
+	horizontalBarOptions,
+} from "./chartOptions.js";
 
 const Utilization = (props) => {
 	// Sample data for the chart
@@ -27,7 +32,7 @@ const Utilization = (props) => {
 				backgroundColor: "rgba(166,167,247,1)",
 				borderWidth: 1,
 				hoverBackgroundColor: "rgba(196,187,247,1)",
-				data: [65, 59, 80, 81, 56, 55, 40, 20, 50, 80],
+				data: [65, 59, 80, 81, 56, 55, 40, 220, 50, 80],
 			},
 		],
 	};
@@ -40,39 +45,6 @@ const Utilization = (props) => {
 			},
 		],
 		labels: ["Electronics", "Furniture", "Toys"],
-	};
-
-	const barChartOptions = {
-		maintainAspectRatio: false,
-		scales: {
-			xAxes: [
-				{
-					gridLines: {
-						display: false,
-					},
-				},
-			],
-			yAxes: [
-				{
-					gridLines: {
-						display: false,
-					},
-				},
-			],
-		},
-		elements: {
-			bar: {
-				borderRadius: 20, // Set border radius of bars to 0
-			},
-		},
-	};
-
-	const doughnutOptions = {
-		plugins: {
-			legend: {
-				position: "top", // Place legend at the top
-			},
-		},
 	};
 
 	const sampleData = [
@@ -170,19 +142,6 @@ const Utilization = (props) => {
 				barThickness: 20,
 			},
 		],
-	};
-
-	const horizontalBarOptions = {
-		scales: {
-			xAxes: [{ stacked: true }],
-			yAxes: [{ stacked: true }],
-		},
-		tooltips: {
-			enabled: false,
-		},
-		legend: {
-			display: false, // Disable legend
-		},
 	};
 
 	const [currentPage, setCurrentPage] = useState(1);

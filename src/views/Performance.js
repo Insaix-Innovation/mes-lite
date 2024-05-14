@@ -3,7 +3,7 @@ import classnames from "classnames";
 import pflImage from "../assets/img/pfl.png";
 import { useState } from "react";
 import { Bar, Line, Pie, Doughnut } from "react-chartjs-2";
-import { Badge } from "reactstrap";
+import {barChartOptions, doughnutOptions} from "./chartOptions.js";
 import {
 	Button,
 	Card,
@@ -19,29 +19,9 @@ import {
 	Row,
 	Table,
 } from "reactstrap";
-
-// core components
-import {
-	chartExample1,
-	chartExample2,
-	chartOptions,
-	parseOptions,
-} from "variables/charts.js";
 import Pagination from "components/Pagination";
 
 const Performance = (props) => {
-	const [activeNav, setActiveNav] = useState(1);
-	const [chartExample1Data, setChartExample1Data] = useState("data1");
-
-	if (window.Chart) {
-		parseOptions(Chart, chartOptions());
-	}
-
-	const toggleNavs = (e, index) => {
-		e.preventDefault();
-		setActiveNav(index);
-		setChartExample1Data("data" + index);
-	};
 
 	const barChartData = {
 		labels: ["A", "B", "C", "D", "E", "F", "J", "K", "M"],
@@ -64,39 +44,6 @@ const Performance = (props) => {
 			},
 		],
 		labels: ["A", "B", "C"],
-	};
-
-	const barChartOptions = {
-		maintainAspectRatio: false,
-		scales: {
-			xAxes: [
-				{
-					gridLines: {
-						display: false,
-					},
-				},
-			],
-			yAxes: [
-				{
-					gridLines: {
-						display: false,
-					},
-				},
-			],
-		},
-		elements: {
-			bar: {
-				borderRadius: 20, // Set border radius of bars to 0
-			},
-		},
-	};
-
-	const doughnutOptions = {
-		plugins: {
-			legend: {
-				position: "top", // Place legend at the top
-			},
-		},
 	};
 
 	const sampleData = [
