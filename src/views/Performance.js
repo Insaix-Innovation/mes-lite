@@ -27,6 +27,7 @@ import {
 	chartOptions,
 	parseOptions,
 } from "variables/charts.js";
+import Pagination from "components/Pagination";
 
 const Performance = (props) => {
 	const [activeNav, setActiveNav] = useState(1);
@@ -145,6 +146,13 @@ const Performance = (props) => {
 			performance: "68%",
 		},
 	];
+
+	const [currentPage, setCurrentPage] = useState(1);
+	let pageSize = 4;
+
+	const firstPageIndex = (currentPage - 1) * pageSize;
+	const lastPageIndex = firstPageIndex + pageSize;
+	const currentTableData = sampleData.slice(firstPageIndex, lastPageIndex);
 
 	return (
 		<>
@@ -299,7 +307,7 @@ const Performance = (props) => {
 												</tr>
 											</thead>
 											<tbody>
-												{sampleData.map(
+												{currentTableData.map(
 													(data, index) => (
 														<tr key={index}>
 															<td>
@@ -330,11 +338,19 @@ const Performance = (props) => {
 											<tr>
 												<td colSpan={7}>
 													<div className="pagination d-flex justify-content-center">
-														<Button>1</Button>
-														<Button>2</Button>
-														<Button>3</Button>
-														<Button>4</Button>
-														<Button>5</Button>
+													<Pagination
+														className="pagination-bar mb-0"
+														currentPage={
+															currentPage
+														}
+														totalCount={
+															sampleData.length
+														}
+														pageSize={pageSize}
+														onPageChange={(page) =>
+															setCurrentPage(page)
+														}
+													/>
 													</div>
 												</td>
 											</tr>
