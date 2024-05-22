@@ -30,8 +30,6 @@ const Utilization = (props) => {
 			{
 				label: "Utilization",
 				backgroundColor: "rgba(166,167,247,1)",
-				borderWidth: 1,
-				hoverBackgroundColor: "rgba(196,187,247,1)",
 				data: [65, 59, 80, 81, 56, 55, 40, 220, 50, 80],
 			},
 		],

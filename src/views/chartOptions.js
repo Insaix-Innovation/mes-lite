@@ -1,3 +1,4 @@
+//chartjs
 const barChartOptions = {
 	maintainAspectRatio: false,
 	legend: {
@@ -26,31 +27,42 @@ const barChartOptions = {
 	},
 	elements: {
 		bar: {
-			borderRadius: 0, // Set border radius of bars to 0
+			borderRadius: 0,
 		},
 	},
 };
 
-export const barChartOptions2 = (series) => ({
-	options: {
-		chart: {
-			type: "bar",
-			toolbar: {
-				show: false,
-			},
+//apexchart
+export const barChartOptions2 = () => ({
+	chart: {
+		type: "bar",
+		toolbar: {
+			show: false,
 		},
-		series: [{data: series}],
-		plotOptions: {
-			bar: {
-				horizontal: false,
-			},
+	},
+	plotOptions: {
+		bar: {
+			horizontal: false,
 		},
-		dataLabels: {
-			enabled: false,
+	},
+	dataLabels: {
+		enabled: false,
+	},
+	xaxis: {
+		categories: ["A", "B", "C", "D", "E", "F", "J", "K", "M"],
+	},
+	yaxis: {
+		labels: {
+			show: false,
 		},
-		xaxis: {
-			categories: ["A", "B", "C", "D", "E", "F", "J", "K", "M"],
-		},
+	},
+	grid: {
+		show: false,
+	},
+	legend: {
+		show: true,
+		position: "top",
+		horizontalAlign: "center",
 	},
 });
 
@@ -115,6 +127,7 @@ export const horizontalBarChartOpt = (series) => ({
 		},
 		xaxis: {
 			categories: ["MachineStatus"],
+			max: 1440,
 		},
 		yaxis: {
 			labels: {

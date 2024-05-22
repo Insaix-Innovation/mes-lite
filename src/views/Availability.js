@@ -13,7 +13,6 @@ import {
 	Row,
 	Table,
 } from "reactstrap";
-import ApexCharts from "apexcharts";
 import { Bar, Line, Pie, Doughnut, HorizontalBar } from "react-chartjs-2";
 import React, { useState } from "react";
 import Calendar from "react-calendar";
@@ -37,17 +36,11 @@ const Availability = (props) => {
 			{
 				label: "Availability",
 				backgroundColor: "rgba(166,167,247,1)",
-				borderWidth: 1,
-				borderRadius: 0,
-				hoverBackgroundColor: "rgba(196,187,247,1)",
 				data: [65, 59, 80, 81, 56, 55, 40, 220, 50, 80],
+				borderRadius: 0,
 			},
 		],
 	};
-
-	// apexchart
-	// const barChartData = [65, 59, 80, 81, 56, 55, 40, 220, 50, 80];
-	// const barChartOptions = barChartOptions2(barChartData);
 
 	const doughnutData = {
 		datasets: [
@@ -145,7 +138,7 @@ const Availability = (props) => {
 		idle: "#ebebeb",
 		initializing: "#ffa64d",
 		ready: "#ffea4a",
-		running: "#5fff2e",
+		running: "#55cf4a",
 		error: "#ff2b0f",
 	};
 
@@ -215,12 +208,6 @@ const Availability = (props) => {
 										data={barChartData}
 										options={barChartOptions}
 									/>
-									{/* <Chart
-										options={barChartOptions.options}
-										series={barChartOptions.options.series}
-										type="bar"
-										height={150}
-									/> */}
 								</CardBody>
 							</Card>
 						</Col>
