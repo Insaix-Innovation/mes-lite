@@ -13,29 +13,41 @@ import {
 	Row,
 	Table,
 } from "reactstrap";
+import ApexCharts from "apexcharts";
 import { Bar, Line, Pie, Doughnut, HorizontalBar } from "react-chartjs-2";
 import React, { useState } from "react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 import Pagination from "components/Pagination";
 import {
 	barChartOptions,
 	doughnutOptions,
 	horizontalBarOptions,
+	horizontalBarChartOpt,
+	barChartOptions2,
 } from "./chartOptions.js";
+import Chart from "react-apexcharts";
+const Availability = (props) => {
+	const [dateSelect, onCalendarDateChange] = useState(new Date());
 
-const Utilization = (props) => {
-	// Sample data for the chart
+	// chartjs
 	const barChartData = {
 		labels: ["A", "B", "C", "D", "E", "F", "J", "K", "M"],
 		datasets: [
 			{
-				label: "Utilization",
+				label: "Availability",
 				backgroundColor: "rgba(166,167,247,1)",
 				borderWidth: 1,
+				borderRadius: 0,
 				hoverBackgroundColor: "rgba(196,187,247,1)",
 				data: [65, 59, 80, 81, 56, 55, 40, 220, 50, 80],
 			},
 		],
 	};
+
+	// apexchart
+	// const barChartData = [65, 59, 80, 81, 56, 55, 40, 220, 50, 80];
+	// const barChartOptions = barChartOptions2(barChartData);
 
 	const doughnutData = {
 		datasets: [
@@ -44,7 +56,7 @@ const Utilization = (props) => {
 				backgroundColor: ["#051548", "#33FAFF", "#a0a0a0"],
 			},
 		],
-		labels: ["Electronics", "Furniture", "Toys"],
+		labels: ["Idle", "Stop", "Error"],
 	};
 
 	const sampleData = [
@@ -56,7 +68,7 @@ const Utilization = (props) => {
 			runTime: "7 hours",
 			downTime: "1 hour",
 			breakRest: "0.5 hour",
-			utilization: "85%",
+			Availability: "85%",
 		},
 		{
 			machine: "Machine 1",
@@ -66,7 +78,7 @@ const Utilization = (props) => {
 			runTime: "7 hours",
 			downTime: "1 hour",
 			breakRest: "0.5 hour",
-			utilization: "85%",
+			Availability: "85%",
 		},
 		{
 			machine: "Machine 1",
@@ -76,7 +88,7 @@ const Utilization = (props) => {
 			runTime: "7 hours",
 			downTime: "1 hour",
 			breakRest: "0.5 hour",
-			utilization: "85%",
+			Availability: "85%",
 		},
 		{
 			machine: "Machine 2",
@@ -86,7 +98,7 @@ const Utilization = (props) => {
 			runTime: "7 hours",
 			downTime: "0.5 hour",
 			breakRest: "0.75 hour",
-			utilization: "90%",
+			Availability: "90%",
 		},
 		{
 			machine: "Machine 3",
@@ -96,7 +108,7 @@ const Utilization = (props) => {
 			runTime: "7 hours",
 			downTime: "0.75 hour",
 			breakRest: "0.25 hour",
-			utilization: "88%",
+			Availability: "88%",
 		},
 		{
 			machine: "Machine 4",
@@ -106,7 +118,7 @@ const Utilization = (props) => {
 			runTime: "7 hours",
 			downTime: "1.5 hour",
 			breakRest: "0.5 hour",
-			utilization: "82%",
+			Availability: "82%",
 		},
 		{
 			machine: "Machine 5",
@@ -116,33 +128,34 @@ const Utilization = (props) => {
 			runTime: "7 hours",
 			downTime: "0.25 hour",
 			breakRest: "0.5 hour",
-			utilization: "87%",
+			Availability: "87%",
 		},
 	];
 
-	const horizontalBarData = {
-		labels: [""],
-		datasets: [
-			{
-				label: "Stack 1",
-				backgroundColor: "rgba(255, 99, 132, 0.5)",
-				data: [20],
-				barThickness: 20,
-			},
-			{
-				label: "Stack 2",
-				backgroundColor: "rgba(54, 162, 235, 0.5)",
-				data: [30],
-				barThickness: 20,
-			},
-			{
-				label: "Stack 3",
-				backgroundColor: "rgba(75, 192, 192, 0.5)",
-				data: [50],
-				barThickness: 20,
-			},
-		],
+	const statusData = [
+		{ start: 0, end: 60, status: "idle" },
+		{ start: 60, end: 120, status: "initializing" },
+		{ start: 120, end: 300, status: "ready" },
+		{ start: 300, end: 360, status: "error" },
+		{ start: 360, end: 700, status: "running" },
+		{ start: 700, end: 1440, status: "error" },
+	];
+
+	const colors = {
+		idle: "#ebebeb",
+		initializing: "#ffa64d",
+		ready: "#ffea4a",
+		running: "#5fff2e",
+		error: "#ff2b0f",
 	};
+
+	const series = statusData.map(({ start, end, status }, index) => ({
+		name: `${status}-${index}`,
+		data: [end - start],
+		color: colors[status],
+	}));
+
+	const horizontalChartOptions = horizontalBarChartOpt(series);
 
 	const [currentPage, setCurrentPage] = useState(1);
 	let pageSize = 4;
@@ -196,18 +209,24 @@ const Utilization = (props) => {
 					<Row className="mb-4">
 						<Col md="8">
 							<Card>
-								<CardHeader>Utilization Per Day</CardHeader>
+								<CardHeader>Availability Per Day</CardHeader>
 								<CardBody>
 									<Bar
 										data={barChartData}
 										options={barChartOptions}
 									/>
+									{/* <Chart
+										options={barChartOptions.options}
+										series={barChartOptions.options.series}
+										type="bar"
+										height={150}
+									/> */}
 								</CardBody>
 							</Card>
 						</Col>
 						<Col md="4">
 							<Card>
-								<CardHeader>Overall Utilization</CardHeader>
+								<CardHeader>Overall Availability</CardHeader>
 								<CardBody>
 									<Doughnut
 										data={doughnutData}
@@ -217,11 +236,13 @@ const Utilization = (props) => {
 							</Card>
 						</Col>
 					</Row>
-					<Row className="mb-4">
-						<Col>
-							<div>
-								<Card>
-									<CardHeader>Summary</CardHeader>
+					<Col>
+						<Row className="mb-4 bg-white">
+							<Col className="p-0">
+								<Card className="border-0">
+									<CardHeader className="border-0">
+										Summary
+									</CardHeader>
 									<Table
 										className="align-items-center table-flush"
 										responsive
@@ -230,14 +251,15 @@ const Utilization = (props) => {
 											<tr className="tableHeader">
 												<th scope="col">Machine</th>
 												<th scope="col">Date</th>
-												<th scope="col">Start Time</th>
-												<th scope="col">End Time</th>
-												<th scope="col">Run Time</th>
-												<th scope="col">DownTime</th>
 												<th scope="col">
-													Break/Rest(Hr)
+													Total Running Time
 												</th>
-												<th scope="col">Utilization</th>
+												<th scope="col">
+													Total Stop Time
+												</th>
+												<th scope="col">
+													Availability
+												</th>
 											</tr>
 										</thead>
 										<tbody>
@@ -246,24 +268,86 @@ const Utilization = (props) => {
 													<tr key={index}>
 														<td>{data.machine}</td>
 														<td>{data.date}</td>
-														<td>
-															{data.startTime}
-														</td>
-														<td>{data.endTime}</td>
 														<td>{data.runTime}</td>
 														<td>{data.downTime}</td>
 														<td>
-															{data.breakRest}
-														</td>
-														<td>
-															{data.utilization}
+															{data.Availability}
 														</td>
 													</tr>
 												)
 											)}
 										</tbody>
 										<tr>
-											<td colSpan={8}>
+											<td colSpan={5}>
+												<div className="pagination d-flex justify-content-center">
+													<Pagination
+														className="pagination-bar mb-0"
+														currentPage={
+															currentPage
+														}
+														totalCount={
+															sampleData.length
+														}
+														pageSize={pageSize}
+														onPageChange={(page) =>
+															setCurrentPage(page)
+														}
+													/>
+												</div>
+											</td>
+										</tr>
+									</Table>
+								</Card>
+							</Col>
+							<Col className="d-flex align-items-center">
+								<Calendar
+									className="mx-auto"
+									onChange={onCalendarDateChange}
+									value={dateSelect}
+								/>
+							</Col>
+						</Row>
+					</Col>
+
+					<Row className="mb-4">
+						<Col>
+							<div>
+								<Card>
+									<CardHeader>Job Order Summary</CardHeader>
+									<Table
+										className="align-items-center table-flush"
+										responsive
+									>
+										<thead>
+											<tr className="tableHeader">
+												<th scope="col">Job Order</th>
+												<th scope="col">Start Time</th>
+												<th scope="col">End Time</th>
+												<th scope="col">
+													Planned Output
+												</th>
+												<th scope="col">
+													Planned Duration (hrs)
+												</th>
+											</tr>
+										</thead>
+										<tbody>
+											{currentTableData.map(
+												(data, index) => (
+													<tr key={index}>
+														<td>{data.machine}</td>
+														<td>{data.date}</td>
+														<td>{data.runTime}</td>
+														<td>{data.downTime}</td>
+														<td>
+															{data.Availability}
+														</td>
+													</tr>
+												)
+											)}
+										</tbody>
+										<tr>
+											<td colSpan={5}>
 												<div className="pagination d-flex justify-content-center">
 													<Pagination
 														className="pagination-bar mb-0"
@@ -292,10 +376,20 @@ const Utilization = (props) => {
 								<Card>
 									<CardHeader>Machine Status</CardHeader>
 									<CardBody>
-										<div style={{ height: "100px" }}>
-											<HorizontalBar
-												data={horizontalBarData}
-												options={horizontalBarOptions}
+										<div
+											style={{ height: "fit-content" }}
+											id="machineStatusChart"
+										>
+											<Chart
+												options={
+													horizontalChartOptions.options
+												}
+												series={
+													horizontalChartOptions
+														.options.series
+												}
+												type="bar"
+												height={150}
 											/>
 										</div>
 									</CardBody>
@@ -309,4 +403,4 @@ const Utilization = (props) => {
 	);
 };
 
-export default Utilization;
+export default Availability;

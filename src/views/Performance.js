@@ -3,7 +3,7 @@ import classnames from "classnames";
 import pflImage from "../assets/img/pfl.png";
 import { useState } from "react";
 import { Bar, Line, Pie, Doughnut } from "react-chartjs-2";
-import {barChartOptions, doughnutOptions} from "./chartOptions.js";
+import { barChartOptions, doughnutOptions } from "./chartOptions.js";
 import {
 	Button,
 	Card,
@@ -22,7 +22,6 @@ import {
 import Pagination from "components/Pagination";
 
 const Performance = (props) => {
-
 	const barChartData = {
 		labels: ["A", "B", "C", "D", "E", "F", "J", "K", "M"],
 		datasets: [
@@ -53,7 +52,7 @@ const Performance = (props) => {
 			cycleTime: 10,
 			target: 12,
 			output: 100,
-			runTime: "08:00 - 16:00",
+			runTime: "10",
 			performance: "85%",
 		},
 		{
@@ -62,7 +61,7 @@ const Performance = (props) => {
 			cycleTime: 8,
 			target: 10,
 			output: 120,
-			runTime: "07:00 - 15:00",
+			runTime: "12",
 			performance: "90%",
 		},
 		{
@@ -71,7 +70,7 @@ const Performance = (props) => {
 			cycleTime: 12,
 			target: 15,
 			output: 80,
-			runTime: "09:00 - 17:00",
+			runTime: "11",
 			performance: "80%",
 		},
 		{
@@ -80,7 +79,7 @@ const Performance = (props) => {
 			cycleTime: 9,
 			target: 11,
 			output: 110,
-			runTime: "08:30 - 16:30",
+			runTime: "10",
 			performance: "95%",
 		},
 		{
@@ -89,7 +88,7 @@ const Performance = (props) => {
 			cycleTime: 11,
 			target: 14,
 			output: 95,
-			runTime: "08:00 - 16:00",
+			runTime: "13",
 			performance: "68%",
 		},
 	];
@@ -106,6 +105,45 @@ const Performance = (props) => {
 			<div className="header pb-8 pt-5 pt-md-8">
 				<Container fluid>
 					<div className="header-body">
+						<div className="fromToDateSelection">
+							<div
+								className="mb-3 mx-auto p-2"
+								style={{
+									width: "fit-content",
+									backgroundColor: "rgb(225 236 255)",
+									borderRadius: "10px",
+								}}
+							>
+								<form className="text-center d-flex align-items-center">
+									<label for="fromDate" className="mb-0 mr-2">
+										From:{" "}
+									</label>
+									<input
+										type="date"
+										id="fromDate"
+										className="form-control mr-2 p-1"
+										style={{ height: "fit-content" }}
+									></input>
+
+									<label for="toDate" className="mb-0 mr-2">
+										To:{" "}
+									</label>
+									<input
+										type="date"
+										id="toDate"
+										className="form-control mr-2 p-1"
+										style={{ height: "fit-content" }}
+									></input>
+
+									<input
+										type="submit"
+										value={"go"}
+										className="btn btn-primary py-1 px-2"
+									/>
+								</form>
+							</div>
+						</div>
+
 						<Row className="mb-4">
 							<Col lg="6" xl="3">
 								<Card
@@ -285,19 +323,23 @@ const Performance = (props) => {
 											<tr>
 												<td colSpan={7}>
 													<div className="pagination d-flex justify-content-center">
-													<Pagination
-														className="pagination-bar mb-0"
-														currentPage={
-															currentPage
-														}
-														totalCount={
-															sampleData.length
-														}
-														pageSize={pageSize}
-														onPageChange={(page) =>
-															setCurrentPage(page)
-														}
-													/>
+														<Pagination
+															className="pagination-bar mb-0"
+															currentPage={
+																currentPage
+															}
+															totalCount={
+																sampleData.length
+															}
+															pageSize={pageSize}
+															onPageChange={(
+																page
+															) =>
+																setCurrentPage(
+																	page
+																)
+															}
+														/>
 													</div>
 												</td>
 											</tr>

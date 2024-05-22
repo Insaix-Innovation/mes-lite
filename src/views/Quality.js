@@ -22,7 +22,6 @@ import {
 } from "reactstrap";
 
 const Quality = (props) => {
-
 	const barChartData = {
 		labels: ["A", "B", "C", "D", "E", "F", "J", "K", "M"],
 		datasets: [
@@ -105,6 +104,44 @@ const Quality = (props) => {
 		<>
 			<div className="header pb-8 pt-5 pt-md-8">
 				<Container fluid>
+					<div className="fromToDateSelection">
+						<div
+							className="mb-3 mx-auto p-2"
+							style={{
+								width: "fit-content",
+								backgroundColor: "rgb(225 236 255)",
+								borderRadius: "10px",
+							}}
+						>
+							<form className="text-center d-flex align-items-center">
+								<label for="fromDate" className="mb-0 mr-2">
+									From:{" "}
+								</label>
+								<input
+									type="date"
+									id="fromDate"
+									className="form-control mr-2 p-1"
+									style={{ height: "fit-content" }}
+								></input>
+
+								<label for="toDate" className="mb-0 mr-2">
+									To:{" "}
+								</label>
+								<input
+									type="date"
+									id="toDate"
+									className="form-control mr-2 p-1"
+									style={{ height: "fit-content" }}
+								></input>
+
+								<input
+									type="submit"
+									value={"go"}
+									className="btn btn-primary py-1 px-2"
+								/>
+							</form>
+						</div>
+					</div>
 					<Row className="mb-4">
 						<Col md="8">
 							<Card>

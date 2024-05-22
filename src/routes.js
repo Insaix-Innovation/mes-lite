@@ -10,6 +10,7 @@ import Machine from "views/Machine.js";
 import Performance from "views/Performance.js";
 import Utilization from "views/Utilization.js";
 import Quality from "views/Quality.js";
+import Availability from "views/Availability";
 
 var routes = [
 	{
@@ -33,11 +34,18 @@ var routes = [
 		component: <Login />,
 		layout: "/auth",
 	},
+	// {
+	// 	path: "/utilization",
+	// 	name: "Utilization",
+	// 	icon: "ni ni-spaceship text-white",
+	// 	component: <Utilization />,
+	// 	layout: "/admin",
+	// },
 	{
-		path: "/utilization",
-		name: "Utilization",
+		path: "/availability",
+		name: "Availability",
 		icon: "ni ni-spaceship text-white",
-		component: <Utilization />,
+		component: <Availability />,
 		layout: "/admin",
 	},
 	{

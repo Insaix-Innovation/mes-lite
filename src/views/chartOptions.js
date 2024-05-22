@@ -19,17 +19,40 @@ const barChartOptions = {
 				},
 				ticks: {
 					min: 0,
-                    display: false
+					display: false,
 				},
 			},
 		],
 	},
 	elements: {
 		bar: {
-			borderRadius: 20, // Set border radius of bars to 0
+			borderRadius: 0, // Set border radius of bars to 0
 		},
 	},
 };
+
+export const barChartOptions2 = (series) => ({
+	options: {
+		chart: {
+			type: "bar",
+			toolbar: {
+				show: false,
+			},
+		},
+		series: [{data: series}],
+		plotOptions: {
+			bar: {
+				horizontal: false,
+			},
+		},
+		dataLabels: {
+			enabled: false,
+		},
+		xaxis: {
+			categories: ["A", "B", "C", "D", "E", "F", "J", "K", "M"],
+		},
+	},
+});
 
 const doughnutOptions = {
 	responsive: true,
@@ -63,11 +86,90 @@ const horizontalBarOptions = {
 		],
 	},
 	tooltips: {
-		enabled: false,
+		enabled: true,
 	},
 	legend: {
-		display: false, // Disable legend
+		display: true,
 	},
 };
+
+export const horizontalBarChartOpt = (series) => ({
+	options: {
+		chart: {
+			type: "bar",
+			height: 350,
+			stacked: true,
+			toolbar: {
+				show: false,
+			},
+		},
+		series: series,
+		plotOptions: {
+			bar: {
+				horizontal: true,
+			},
+		},
+		stroke: {
+			width: 1,
+			colors: ["#fff"],
+		},
+		xaxis: {
+			categories: ["MachineStatus"],
+		},
+		yaxis: {
+			labels: {
+				show: false,
+			},
+		},
+		fill: {
+			opacity: 1,
+		},
+		dataLabels: {
+			enabled: false,
+		},
+		legend: {
+			position: "top",
+			horizontalAlign: "center",
+			itemMargin: {
+				horizontal: 10, // Adjust spacing between legend items
+			},
+			labels: {},
+			customLegendItems: [
+				"Idle",
+				"Initializing",
+				"Ready",
+				"Error",
+				"Running",
+			],
+			onItemClick: {
+				toggleDataSeries: false,
+			},
+			onItemHover: {
+				highlightDataSeries: false,
+			},
+		},
+		tooltip: {
+			y: {
+				formatter: true,
+				title: {
+					formatter: (label) => {
+						const legendLabels = {
+							idle: "Idle",
+							initializing: "Initializing",
+							ready: "Ready",
+							running: "Running",
+							error: "Error",
+						};
+						const lab = label.split("-")[0];
+						return `${legendLabels[lab]} :`;
+					},
+				},
+			},
+		},
+		grid: {
+			show: false,
+		},
+	},
+});
 
 export { barChartOptions, doughnutOptions, horizontalBarOptions };
