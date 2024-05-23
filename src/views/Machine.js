@@ -13,7 +13,7 @@ import pflImage from "../assets/img/machine.png";
 import { doughnutOptions } from "./chartOptions.js";
 
 const Machine = (props) => {
-	const [selectedPage, setSelectedPage] = useState("OEE_UPH");
+	const [selectedPage, setSelectedPage] = useState("Live");
 
 	const handlePageChange = (page) => {
 		setSelectedPage(page);
