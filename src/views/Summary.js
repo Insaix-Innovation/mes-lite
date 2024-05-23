@@ -1,32 +1,16 @@
-import Chart from "chart.js";
-import classnames from "classnames";
-import pflImage from "../assets/img/pfl.png";
-import { useState } from "react";
-import { Bar, Line, Pie, Doughnut } from "react-chartjs-2";
-import { Badge } from "reactstrap";
+import { Doughnut } from "react-chartjs-2";
 import {
-	Button,
-	Card,
+	Badge, Card,
 	CardBody,
 	CardHeader,
 	CardTitle,
 	Col,
-	Container,
-	Nav,
-	NavItem,
-	NavLink,
-	Progress,
-	Row,
-	Table,
+	Container, Row
+	, Table
 } from "reactstrap";
+import pflImage from "../assets/img/pfl.png";
 
 // core components
-import {
-	chartExample1,
-	chartExample2,
-	chartOptions,
-	parseOptions,
-} from "variables/charts.js";
 import { doughnutOptions } from "./chartOptions.js";
 
 const Summary = (props) => {
@@ -50,7 +34,13 @@ const Summary = (props) => {
 			<div className="header pb-8 pt-5 pt-md-8">
 				<Container fluid>
 					<div className="header-body">
+						<div style={{ paddingBottom: '10px', textAlign: 'right' }}>
+							<h6 className="text-muted ls-1 mb-1">
+								Last Update: 4:30 pm
+							</h6>
+						</div>
 						<Row>
+
 							<Col>
 								<Card className="card-stats mb-4 mb-xl-4 ">
 									<CardBody>
@@ -186,7 +176,7 @@ const Summary = (props) => {
 								/>
 								<Badge
 									style={{
-										backgroundColor: "lightgray",
+										backgroundColor: "lightgreen",
 										color: "black",
 										textTransform: "none",
 									}}
@@ -194,64 +184,47 @@ const Summary = (props) => {
 								>
 									Machine 1
 								</Badge>
+
+								<Table className="table-no-border"  style={{ justifyContent: 'flex-end', display: 'flex' }}>
+
+									<tr>
+										<td style={{ display: "flex", alignItems: "center", border: "none" }}>
+											<div style={{ width: "20px", height: "20px", backgroundColor: "lightgreen", borderRadius: "50%", marginRight: "10px" }}></div>
+											<span>Machine Running</span>
+											</td>
+											<td style={{ display: "flex", alignItems: "center", border: "none" }}>
+												<div style={{ width: "20px", height: "20px", backgroundColor: "yellow", borderRadius: "50%", marginRight: "10px" }}></div>
+												<span>Machine Ready</span>
+											</td>
+									</tr>
+									<tr>
+
+										<td style={{ display: "flex", alignItems: "center", border: "none" }}>
+											<div style={{ width: "20px", height: "20px", backgroundColor: "orange", borderRadius: "50%", marginRight: "10px" }}></div>
+											<span>Machine Initializing</span>
+											</td>
+											<td style={{ display: "flex", alignItems: "center", border: "none" }}>
+											<div style={{ width: "20px", height: "20px", backgroundColor: "blue", borderRadius: "50%", marginRight: "10px" }}></div>
+											<span>Machine Idle</span>
+											</td>
+								
+									</tr>
+
+									<tr>
+										<td style={{ display: "flex", alignItems: "center", border: "none" }}>
+											<div style={{ width: "20px", height: "20px", backgroundColor: "red", borderRadius: "50%", marginRight: "10px" }}></div>
+											<span>Machine Down</span>
+										</td>
+
+									</tr>
+
+								</Table>
 							</CardBody>
 						</Card>
 					</Col>
 					<Col xl="4">
 						<Card className="shadow">
-							<CardHeader className="bg-transparent">
-								<Row className="align-items-center">
-									<div className="col">
-										<h2 className="mb-0">Overall OEE</h2>
 
-										<table style={{ width: "100%" }}>
-											<tr>
-												<td style={{ width: "33%" }}>
-													{" "}
-													<h6 className=" text-muted ls-1 mb-1">
-														Target: 800
-													</h6>
-												</td>
-												<td style={{ width: "33%" }}>
-													{" "}
-													<h6 className=" text-muted ls-1 mb-1">
-														Actual: 47
-													</h6>
-												</td>
-												<td style={{ width: "33%" }}>
-													{" "}
-													<h6 className=" text-muted ls-1 mb-1">
-														Reject: 3
-													</h6>
-												</td>
-											</tr>
-										</table>
-									</div>
-								</Row>
-							</CardHeader>
-							<CardBody>
-								{/* Chart */}
-								<center>
-									<div
-										className="chart "
-										style={{
-											width: "150px",
-											height: "150px",
-										}}
-									>
-										<Doughnut
-											data={doughnutData}
-											options={{
-												...doughnutOptions,
-												legend: {
-													display: false,
-													position: "top",
-												},
-											}}
-										/>
-									</div>
-								</center>
-							</CardBody>
 							<CardHeader className="bg-transparent">
 								<Row className="align-items-center">
 									<div className="col">
@@ -298,6 +271,27 @@ const Summary = (props) => {
 									</div>
 								</center>
 							</CardBody>
+
+							<CardHeader className="bg-transparent">
+								<Row className="align-items-center">
+									<div className="col">
+										<h2 className="mb-0">Machine UPH</h2>
+
+										<table style={{ width: "100%" }}>
+											<tr>
+												<td style={{ width: "33%" }}>
+													{" "}
+													<h6 className=" text-muted ls-1 mb-1">
+														Machine 1: 40
+													</h6>
+												</td>
+
+											</tr>
+										</table>
+									</div>
+								</Row>
+							</CardHeader>
+
 						</Card>
 					</Col>
 				</Row>

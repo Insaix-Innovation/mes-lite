@@ -14,8 +14,8 @@ import Availability from "views/Availability";
 
 var routes = [
 	{
-		path: "/summary",
-		name: "Summary",
+		path: "/overview",
+		name: "Overview",
 		icon: "ni ni-align-center text-white",
 		component: <Summary />,
 		layout: "/admin",
