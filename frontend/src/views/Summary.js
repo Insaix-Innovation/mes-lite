@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from 'react';
 import { Doughnut } from "react-chartjs-2";
 import {
 	Badge, Card,
@@ -28,6 +29,36 @@ const Summary = (props) => {
 	// if (window.Chart) {
 	//     parseOptions(Chart, chartOptions());
 	// }
+	
+	const [totalOutput, setTotalOutput] = useState(0);
+  const [totalRejects, setTotalRejects] = useState(0);
+  const [totalRunTime, setTotalRunTime] = useState(0);
+  const [totalStopTime, setTotalStopTime] = useState(0);
+  const [uniqueErrorCodes, setUniqueErrorCodes] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const response = await fetch("http://localhost:5000/getOverview");
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const data = await response.json();
+        setTotalOutput(data.totalOutput);
+        setTotalRejects(data.totalRejects);
+        setTotalRunTime(data.totalRunTime);
+        setTotalStopTime(data.totalStopTime);
+        setUniqueErrorCodes(data.uniqueErrorCodes);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error.message);
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
 
 	return (
 		<>
@@ -37,6 +68,7 @@ const Summary = (props) => {
 						<div style={{ paddingBottom: '10px', textAlign: 'right' }}>
 							<h6 className="text-muted ls-1 mb-1">
 								Last Update: 4:30 pm
+
 							</h6>
 						</div>
 						<Row>
@@ -47,7 +79,7 @@ const Summary = (props) => {
 										<Row>
 											<div className="col">
 												<span className="h2 font-weight-bold mb-0">
-													47
+												{totalOutput}
 												</span>
 												<CardTitle
 													tag="h5"
@@ -69,7 +101,7 @@ const Summary = (props) => {
 													style={{ color: "red" }}
 													className="h2 font-weight-bold mb-0"
 												>
-													3
+													{totalRejects}
 												</span>
 												<CardTitle
 													style={{ color: "red" }}
@@ -89,7 +121,7 @@ const Summary = (props) => {
 										<Row>
 											<div className="col">
 												<span className="h2 font-weight-bold mb-0">
-													05:53:14
+													{totalRunTime}
 												</span>
 
 												<CardTitle
@@ -109,7 +141,7 @@ const Summary = (props) => {
 										<Row>
 											<div className="col">
 												<span className="h2 font-weight-bold mb-0">
-													00:03:14
+													{totalStopTime}
 												</span>
 
 												<CardTitle
@@ -132,7 +164,7 @@ const Summary = (props) => {
 													style={{ color: "red" }}
 													className="h2 font-weight-bold mb-0"
 												>
-													2
+													{uniqueErrorCodes}
 												</span>
 												<CardTitle
 													style={{ color: "red" }}
@@ -185,29 +217,29 @@ const Summary = (props) => {
 									Machine 1
 								</Badge>
 
-								<Table className="table-no-border"  style={{ justifyContent: 'flex-end', display: 'flex' }}>
+								<Table className="table-no-border" style={{ justifyContent: 'flex-end', display: 'flex' }}>
 
 									<tr>
 										<td style={{ display: "flex", alignItems: "center", border: "none" }}>
 											<div style={{ width: "20px", height: "20px", backgroundColor: "lightgreen", borderRadius: "50%", marginRight: "10px" }}></div>
 											<span>Machine Running</span>
-											</td>
-											<td style={{ display: "flex", alignItems: "center", border: "none" }}>
-												<div style={{ width: "20px", height: "20px", backgroundColor: "yellow", borderRadius: "50%", marginRight: "10px" }}></div>
-												<span>Machine Ready</span>
-											</td>
+										</td>
+										<td style={{ display: "flex", alignItems: "center", border: "none" }}>
+											<div style={{ width: "20px", height: "20px", backgroundColor: "yellow", borderRadius: "50%", marginRight: "10px" }}></div>
+											<span>Machine Ready</span>
+										</td>
 									</tr>
 									<tr>
 
 										<td style={{ display: "flex", alignItems: "center", border: "none" }}>
 											<div style={{ width: "20px", height: "20px", backgroundColor: "orange", borderRadius: "50%", marginRight: "10px" }}></div>
 											<span>Machine Initializing</span>
-											</td>
-											<td style={{ display: "flex", alignItems: "center", border: "none" }}>
+										</td>
+										<td style={{ display: "flex", alignItems: "center", border: "none" }}>
 											<div style={{ width: "20px", height: "20px", backgroundColor: "blue", borderRadius: "50%", marginRight: "10px" }}></div>
 											<span>Machine Idle</span>
-											</td>
-								
+										</td>
+
 									</tr>
 
 									<tr>

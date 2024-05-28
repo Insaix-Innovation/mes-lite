@@ -5,7 +5,7 @@ const pool = require("./db");
 router.get("/getData", async (req, res) => {
   try {
     console.log("Received request for /getData");
-    const test = await pool.query("SELECT * FROM public.job_order");
+    const test = await pool.query("SELECT * FROM public.default_values");
     console.log("Query executed successfully");
     console.log(test.rows); 
     res.json(test.rows);
