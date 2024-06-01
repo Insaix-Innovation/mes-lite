@@ -1,24 +1,26 @@
 const { Pool } = require('pg');
 
+console.log('Starting script');  // Added logging
+
 const pool = new Pool({
   user: 'postgres',
   password: '1234',
   host: 'localhost',
   port: 5432,
-  database: 'oee'
+  database: "oee",
+  idleTimeoutMillis: 100
 });
 
-// Function to test the database connection
-async function testDatabaseConnection() {
+async function checkConnection() {
   try {
-    const result = await pool.query('SELECT NOW()');
-    console.log('Database connected:', result.rows[0]);
-  } catch (err) {
-    console.error('Error connecting to the database:', err.stack);
+    console.log('Attempting to connect to the database');
+    const client = await pool.connect();
+    console.log('Connected successfully');
+    client.release();
+  } catch (error) {
+    console.error('Error connecting to the database:', error.message);
   }
 }
 
-// Call the function to test the connection
-testDatabaseConnection();
-
+checkConnection();
 module.exports = pool;

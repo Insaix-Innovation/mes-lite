@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from 'react';
 import { Doughnut } from "react-chartjs-2";
 import {
 	Badge, Card,
@@ -14,16 +15,76 @@ import pflImage from "../assets/img/pfl.png";
 import { doughnutOptions } from "./chartOptions.js";
 
 const Summary = (props) => {
-	const oeeValue = 50;
+
+
+	const [data, setData] = useState({
+		totalOutput: 0,
+		totalRejects: 0,
+		totalRunTime: '00:00:00',
+		totalStopTime: '00:00:00',
+		uniqueErrorCodes: 0
+	});
+
+	const [uph, setUPH] = useState({
+		target: 0,
+		current: 0,
+	});
+
+	const [machineUPHData, setMachineUPHData] = useState([]);
+
+	const [lastUpdate, setLastUpdate] = useState('');
+
+	useEffect(() => {
+		const fetchData = async () => {
+			try {
+				const now = new Date();
+				setLastUpdate(`${now.getHours()}:${now.getMinutes() < 10 ? '0' : ''}${now.getMinutes()} ${now.getHours() >= 12 ? 'pm' : 'am'}`);
+
+				const response = await fetch('http://localhost:5000/getOverview');
+				if (!response.ok) {
+					throw new Error('Network response was not ok');
+				}
+
+				const result = await response.json();
+				setData(result);
+
+				const UPHresponse = await fetch('http://localhost:5000/calculateUPH');
+				if (!UPHresponse.ok) {
+					throw new Error('Network response was not ok');
+				}
+
+				const UPHresult = await UPHresponse.json();
+				setUPH(UPHresult);
+
+				const machineUPHresponse = await fetch('http://localhost:5000/calculateMachineUPH');
+				if (!machineUPHresponse.ok) {
+					throw new Error('Network response was not ok');
+				}
+
+				const machineUPHresult = await machineUPHresponse.json();
+				setMachineUPHData(machineUPHresult.machineUphData);
+
+
+			} catch (error) {
+				console.error('Error fetching data:', error);
+			}
+		};
+		fetchData();
+		const intervalId = setInterval(fetchData, 5000);
+
+		return () => clearInterval(intervalId); // Cleanup interval on component unmount
+	}, []);
+
+	const uphPercentage = Math.round((uph.current / uph.target) * 100);
 
 	const doughnutData = {
 		datasets: [
 			{
-				data: [oeeValue, 100 - oeeValue],
-				backgroundColor: ["#051548", "#33FAFF"], // Blue for OEE, light gray for remaining
+				data: [uphPercentage, 100 - uphPercentage],
+				backgroundColor: ["#051548", "#33FAFF"], // Blue for UPH, light gray for remaining
 			},
 		],
-		labels: ["OEE", "Target"],
+		labels: [`UPH(%)`, `Target(%)`],
 	};
 	// if (window.Chart) {
 	//     parseOptions(Chart, chartOptions());
@@ -36,7 +97,8 @@ const Summary = (props) => {
 					<div className="header-body">
 						<div style={{ paddingBottom: '10px', textAlign: 'right' }}>
 							<h6 className="text-muted ls-1 mb-1">
-								Last Update: 4:30 pm
+								Last Update: {lastUpdate}
+
 							</h6>
 						</div>
 						<Row>
@@ -47,7 +109,7 @@ const Summary = (props) => {
 										<Row>
 											<div className="col">
 												<span className="h2 font-weight-bold mb-0">
-													47
+													{data.totalOutput}
 												</span>
 												<CardTitle
 													tag="h5"
@@ -69,7 +131,7 @@ const Summary = (props) => {
 													style={{ color: "red" }}
 													className="h2 font-weight-bold mb-0"
 												>
-													3
+													{data.totalRejects}
 												</span>
 												<CardTitle
 													style={{ color: "red" }}
@@ -89,7 +151,7 @@ const Summary = (props) => {
 										<Row>
 											<div className="col">
 												<span className="h2 font-weight-bold mb-0">
-													05:53:14
+													{data.totalRunTime}
 												</span>
 
 												<CardTitle
@@ -109,7 +171,7 @@ const Summary = (props) => {
 										<Row>
 											<div className="col">
 												<span className="h2 font-weight-bold mb-0">
-													00:03:14
+													{data.totalStopTime}
 												</span>
 
 												<CardTitle
@@ -132,7 +194,7 @@ const Summary = (props) => {
 													style={{ color: "red" }}
 													className="h2 font-weight-bold mb-0"
 												>
-													2
+													{data.uniqueErrorCodes}
 												</span>
 												<CardTitle
 													style={{ color: "red" }}
@@ -185,29 +247,29 @@ const Summary = (props) => {
 									Machine 1
 								</Badge>
 
-								<Table className="table-no-border"  style={{ justifyContent: 'flex-end', display: 'flex' }}>
+								<Table className="table-no-border" style={{ justifyContent: 'flex-end', display: 'flex' }}>
 
 									<tr>
 										<td style={{ display: "flex", alignItems: "center", border: "none" }}>
 											<div style={{ width: "20px", height: "20px", backgroundColor: "lightgreen", borderRadius: "50%", marginRight: "10px" }}></div>
 											<span>Machine Running</span>
-											</td>
-											<td style={{ display: "flex", alignItems: "center", border: "none" }}>
-												<div style={{ width: "20px", height: "20px", backgroundColor: "yellow", borderRadius: "50%", marginRight: "10px" }}></div>
-												<span>Machine Ready</span>
-											</td>
+										</td>
+										<td style={{ display: "flex", alignItems: "center", border: "none" }}>
+											<div style={{ width: "20px", height: "20px", backgroundColor: "yellow", borderRadius: "50%", marginRight: "10px" }}></div>
+											<span>Machine Ready</span>
+										</td>
 									</tr>
 									<tr>
 
 										<td style={{ display: "flex", alignItems: "center", border: "none" }}>
 											<div style={{ width: "20px", height: "20px", backgroundColor: "orange", borderRadius: "50%", marginRight: "10px" }}></div>
 											<span>Machine Initializing</span>
-											</td>
-											<td style={{ display: "flex", alignItems: "center", border: "none" }}>
+										</td>
+										<td style={{ display: "flex", alignItems: "center", border: "none" }}>
 											<div style={{ width: "20px", height: "20px", backgroundColor: "blue", borderRadius: "50%", marginRight: "10px" }}></div>
 											<span>Machine Idle</span>
-											</td>
-								
+										</td>
+
 									</tr>
 
 									<tr>
@@ -234,13 +296,13 @@ const Summary = (props) => {
 												<td style={{ width: "50%" }}>
 													{" "}
 													<h6 className=" text-muted ls-1 mb-1">
-														Target: 80
+														Target: {uph.target}
 													</h6>
 												</td>
 												<td style={{ width: "50%" }}>
 													{" "}
 													<h6 className=" text-muted ls-1 mb-1">
-														Actual: 40
+														Current: {uph.current}
 													</h6>
 												</td>
 											</tr>
@@ -278,15 +340,15 @@ const Summary = (props) => {
 										<h2 className="mb-0">Machine UPH</h2>
 
 										<table style={{ width: "100%" }}>
-											<tr>
-												<td style={{ width: "33%" }}>
-													{" "}
-													<h6 className=" text-muted ls-1 mb-1">
-														Machine 1: 40
-													</h6>
-												</td>
-
-											</tr>
+											{machineUPHData.map(machine => (
+												<tr key={machine.machine_id}>
+													<td style={{ width: "33%" }}>
+														<h6 className="text-muted ls-1 mb-1">
+															Machine {machine.machine_id}: {machine.uph !== null ? machine.uph : 'N/A'}
+														</h6>
+													</td>
+												</tr>
+											))}
 										</table>
 									</div>
 								</Row>
