@@ -27,3 +27,7 @@
         display: block;
     }
 }
+.toggled-date {
+    background-color: red !important;
+    color: white !important;
+  }

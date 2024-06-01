@@ -7,7 +7,6 @@ import Icons from "views/examples/Icons.js";
 import Summary from "views/Summary.js";
 import Machine from "views/Machine.js";
 import Performance from "views/Performance.js";
-import Utilization from "views/Utilization.js";
 import Quality from "views/Quality.js";
 import Availability from "views/Availability";
 
@@ -33,13 +32,6 @@ var routes = [
 		component: <Login />,
 		layout: "/auth",
 	},
-	// {
-	// 	path: "/utilization",
-	// 	name: "Utilization",
-	// 	icon: "ni ni-spaceship text-white",
-	// 	component: <Utilization />,
-	// 	layout: "/admin",
-	// },
 	{
 		path: "/availability",
 		name: "Availability",
