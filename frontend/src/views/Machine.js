@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Doughnut } from "react-chartjs-2";
 import {
 	Card,
@@ -14,10 +14,16 @@ import { doughnutOptions } from "./chartOptions.js";
 
 const Machine = (props) => {
 	const [selectedPage, setSelectedPage] = useState("Live");
+    const [selectedMachine, setSelectedMachine] = useState("M01");
 
 	const handlePageChange = (page) => {
 		setSelectedPage(page);
 	};
+
+	const handleMachineChange = (e) => {
+        const machineId = e.target.value;
+        setSelectedMachine(machineId);
+    };
 
 	const oeeValue = 50;
 	const doughnutData = {
@@ -29,6 +35,96 @@ const Machine = (props) => {
 		],
 		labels: ["OEE", "Target"],
 	};
+	const [machineData, setMachineData] = useState({
+		jobOrder: 0,
+		machineUptime: 0,
+		machineDowntime: 0,
+		totalOutputQty: 0,
+		totalRejectQty: 0,
+		machineStatus: 0
+	});
+
+	const [testerData, setTesterData] = useState({
+		pass: 0,
+		failLive: 0,
+		failNeutral: 0,
+		failEarth: 0,
+		failLiveNeutral: 0,
+		failNeutralEarth: 0,
+		failEarthLive: 0,
+		shortWhenOff: 0
+	});
+
+	const [visionData, setVisionData] = useState({
+		good: 0,
+		flowmark: 0,
+		burrno: 0,
+		coloruneven: 0,
+		color:0,
+		scratches:0
+	});
+
+	// useEffect(() => {
+	// 	const fetchData = async () => {
+	// 		try {
+	// 			const machineResponse = await fetch('http://localhost:5000/getMachineLive');
+	// 			if (!machineResponse.ok) {
+	// 				throw new Error('Network response was not ok for /getMachineLive');
+	// 			}
+	// 			const machineResult = await machineResponse.json();
+	// 			setMachineData(machineResult);
+
+	// 			const testerResponse = await fetch('http://localhost:5000/getTesterLive');
+	// 			if (!testerResponse.ok) {
+	// 				throw new Error('Network response was not ok for /getTesterLive');
+	// 			}
+	// 			const testerResult = await testerResponse.json();
+	// 			setTesterData(testerResult);
+
+	// 			const visionResponse = await fetch('http://localhost:5000/getVisionLive');
+	// 			if (!visionResponse.ok) {
+	// 				throw new Error('Network response was not ok for /getVisionLive');
+	// 			}
+	// 			const visionResult = await visionResponse.json();
+	// 			setVisionData(visionResult);
+	// 		} catch (error) {
+	// 			console.error('Error fetching data:', error);
+	// 		}
+	// 	};
+	// 	fetchData();
+	// }, []);
+
+	const fetchData = async (machineId) => {
+        try {
+            const machineResponse = await fetch(`http://localhost:5000/getMachineLive?machineId=${machineId}`);
+            if (!machineResponse.ok) {
+                throw new Error("Network response was not ok for /getMachineLive");
+            }
+            const machineResult = await machineResponse.json();
+            setMachineData(machineResult);
+
+            const testerResponse = await fetch(`http://localhost:5000/getTesterLive?machineId=${machineId}`);
+            if (!testerResponse.ok) {
+                throw new Error("Network response was not ok for /getTesterLive");
+            }
+            const testerResult = await testerResponse.json();
+            setTesterData(testerResult);
+
+            const visionResponse = await fetch(`http://localhost:5000/getVisionLive?machineId=${machineId}`);
+            if (!visionResponse.ok) {
+                throw new Error("Network response was not ok for /getVisionLive");
+            }
+            const visionResult = await visionResponse.json();
+            setVisionData(visionResult);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchData(selectedMachine);
+    }, [selectedMachine]);
+
 
 	return (
 		<>
@@ -51,10 +147,12 @@ const Machine = (props) => {
 														border: "1px solid lightgray",
 														fontSize: "1rem",
 													}}
+													onChange={handleMachineChange}
+                                                    value={selectedMachine}
 												>
-													<option>Line A</option>
-													<option>Line B</option>
-													<option>Line C</option>
+													<option value="M01">M01</option>
+                                                    <option value="M02">M02</option>
+                                                    <option value="M03">M03</option>
 												</select>
 											</h2>
 										</Col>
@@ -129,7 +227,7 @@ const Machine = (props) => {
 								<CardBody>
 									{selectedPage === "OEE_UPH" ? (
 										<>
-											<div className="fromToDateSelection"style={{ fontSize: '10px', width: '50%' }} >
+											<div className="fromToDateSelection" style={{ fontSize: '10px', width: '50%' }} >
 												<div
 													className="mb-3 mx-auto p-2"
 													style={{
@@ -146,7 +244,7 @@ const Machine = (props) => {
 															type="date"
 															id="fromDate"
 															className="form-control mr-2 p-1"
-															style={{ height: "fit-content" ,width:'100px'}}
+															style={{ height: "fit-content", width: '100px' }}
 														></input>
 
 														<label htmlFor="toDate" className="mb-0 mr-2">
@@ -156,7 +254,7 @@ const Machine = (props) => {
 															type="date"
 															id="toDate"
 															className="form-control mr-2 p-1"
-															style={{ height: "fit-content" ,width:'100px'}}
+															style={{ height: "fit-content", width: '100px' }}
 														></input>
 
 														<input
@@ -346,27 +444,27 @@ const Machine = (props) => {
 												<tbody>
 													<tr>
 														<td>Job Order:</td>
-														<td>32134</td>
+														<td>{machineData.jobOrder}</td>
 													</tr>
 													<tr>
 														<td>Machine Up Time (hour):</td>
-														<td>21 hours</td>
+														<td>{machineData.machineUptime} hours</td>
 													</tr>
 													<tr>
 														<td>Machine Stop Time (hour):</td>
-														<td>2 hours</td>
+														<td>{machineData.machineDowntime} hours</td>
 													</tr>
 													<tr>
 														<td>Total Output:</td>
-														<td>40</td>
+														<td>{machineData.totalOutputQty}</td>
 													</tr>
 													<tr>
 														<td>Total Reject:</td>
-														<td>40</td>
+														<td>{machineData.totalRejectQty}</td>
 													</tr>
 													<tr>
 														<td>Machine Status:</td>
-														<td>Running</td>
+														<td>{machineData.machineStatus}</td>
 													</tr>
 												</tbody>
 											</Table>
@@ -375,36 +473,36 @@ const Machine = (props) => {
 												<tbody>
 													<tr>
 														<td>Pass:</td>
-														<td>40</td>
+														<td>{testerData.pass}</td>
 													</tr>
 													<tr>
 														<td>Fail Live:</td>
-														<td>2</td>
+														<td>{testerData.failLive}</td>
 
 													</tr>
 													<tr>
 														<td>Fail Neutral:</td>
-														<td>2</td>
+														<td>{testerData.failNeutral}</td>
 
 													</tr>
 													<tr>
 														<td>Fail Earth:</td>
-														<td>4</td>
+														<td>{testerData.failEarth}</td>
 
 													</tr>
 													<tr>
 														<td>Fail Live x Neutral:</td>
-														<td>4</td>
+														<td>{testerData.failLiveNeutral}</td>
 													</tr>
 													<tr>
 														<td>Fail Neutral x Earth:</td>
-														<td>2</td>
+														<td>{testerData.failNeutralEarth}</td>
 													</tr>
 													<tr><td>Fail Earth x Live:</td>
-														<td>2</td></tr>
+														<td>{testerData.failEarthLive}</td></tr>
 
 													<tr><td>Short When Off:</td>
-														<td>4</td></tr>
+														<td>{testerData.shortWhenOff}</td></tr>
 												</tbody>
 											</Table>
 											<h3 className="mb-0">Vision Data</h3>
@@ -412,26 +510,26 @@ const Machine = (props) => {
 												<tbody>
 													<tr>
 														<td>Pass:</td>
-														<td>40</td>
+														<td>{visionData.good}</td>
 													</tr>
 													<tr>
 														<td>Fail Flow Mark:</td>
-														<td>2</td>
+														<td>{visionData.flowmark}</td>
 
 													</tr>
 													<tr>
 														<td>Fail Burr:</td>
-														<td>2</td>
+														<td>{visionData.burrno}</td>
 
 													</tr>
 													<tr>
 														<td>Fail Colouring:</td>
-														<td>2</td>
+														<td>{visionData.color}</td>
 													</tr>
 													<tr><td>Fail Colour Uneven:</td>
-														<td>2</td></tr>
+														<td>{visionData.coloruneven}</td></tr>
 													<tr><td>Fail Scratches:</td>
-														<td>2</td></tr>
+														<td>{visionData.scratches}</td></tr>
 												</tbody>
 											</Table>
 										</>
