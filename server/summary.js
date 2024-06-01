@@ -5,10 +5,10 @@ const moment = require('moment');
 const { c } = require("tar");
 
 function formatTime(totalMinutes) {
-    const hours = Math.round(totalMinutes / 60);
+    const days = Math.floor(totalMinutes / (24 * 60));
+    const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
     const minutes = totalMinutes % 60;
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:00`;
-
+    return `${days}:${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 }
 
 router.get("/getOEEmetrics", async (req, res) => {
@@ -46,13 +46,17 @@ router.get("/getOverview", async (req, res) => {
       `;
 
         const queryTotalRunTime = `
-        SELECT MAX(machine_uptime_minute) - MIN(machine_uptime_minute) AS total_run_time 
+        SELECT 
+            MAX((machine_uptime_day * 24 * 60) + (machine_uptime_hr * 60) + machine_uptime_minute) - 
+            MIN((machine_uptime_day * 24 * 60) + (machine_uptime_hr * 60) + machine_uptime_minute) AS total_run_time 
         FROM public.oee_metrics 
         WHERE "timestamp" >= $1 AND "timestamp" <= $2;
         `;
 
         const queryTotalStopTime = `
-        SELECT MAX(machine_downtime_minute) - MIN(machine_downtime_minute) AS total_stop_time 
+        SELECT 
+            MAX((machine_downtime_day * 24 * 60) + (machine_downtime_hr * 60) + machine_downtime_minute) - 
+            MIN((machine_downtime_day * 24 * 60) + (machine_downtime_hr * 60) + machine_downtime_minute) AS total_stop_time 
         FROM public.oee_metrics 
         WHERE "timestamp" >= $1 AND "timestamp" <= $2;
         `;
@@ -87,18 +91,17 @@ router.get("/getOverview", async (req, res) => {
         console.log(totalStopTime);
         console.log(totalStopTimeFormatted);
 
-
         // Send total output and total rejects to React frontend
-        res.json({ totalOutput, totalRejects, totalRunTime: totalRunTimeFormatted,totalStopTime: totalStopTimeFormatted, uniqueErrorCodes});
+        res.json({ totalOutput, totalRejects, totalRunTime: totalRunTimeFormatted, totalStopTime: totalStopTimeFormatted, uniqueErrorCodes });
     } catch (err) {
         console.error("Error executing query:", err.message);
         res.status(500).send("Server Error");
     }
 });
 
-router.get('/calculateUPH', async (req, res) => {
+router.get('/calculateOverallUPH', async (req, res) => {
     try {
-        console.log("Received request for /calculateUPH");
+        console.log("Received request for /calculateOverallUPH");
         
         // Get operating hours from default_values
         const defaultValuesQuery = `SELECT operating_hours_start, operating_hours_end FROM default_values`;
@@ -265,6 +268,17 @@ router.get('/calculateMachineUPH', async (req, res) => {
         res.json({
             machineUphData
         });
+    } catch (err) {
+        console.error("Error executing query:", err.message);
+        res.status(500).send("Server Error");
+    }
+});
+
+router.get("/getMachineStatus", async (req, res) => {
+    try {
+        console.log("Received request for /getMachineStatus");
+        const test = await pool.query("SELECT machine_status FROM public.machine_status where machine_id = 'M01' ORDER BY status_start_time DESC LIMIT 1");
+        res.json(test.rows);
     } catch (err) {
         console.error("Error executing query:", err.message);
         res.status(500).send("Server Error");

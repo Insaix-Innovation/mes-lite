@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("./db");
+const moment = require('moment');
+
 
 router.get("/getMachine", async (req, res) => {
     try {
@@ -234,7 +236,7 @@ router.get("/getTesterLive", async (req, res) => {
 // router.get("/getVisionLive", async (req, res) => {
 //     try {
 //         console.log("Received request for /getVisionLive");
-        
+
 //         const query = `
 //             SELECT 
 //                 (SELECT good_no FROM public.vision_live_data WHERE machine_id = 'M01' AND baseline = false) -
@@ -329,5 +331,114 @@ router.get("/getVisionLive", async (req, res) => {
     }
 });
 
+router.get('/calculateMachineUPHdropDown', async (req, res) => {
+    try {
+        console.log("Received request for /calculateMachineUPHdropDown");
+        const machineId = req.query.machineId;
+        if (!machineId) {
+            return res.status(400).send("machineId is required");
+        }
+        // Get operating hours from default_values
+        const defaultValuesQuery = `SELECT operating_hours_start, operating_hours_end FROM default_values`;
+        const defaultValuesResult = await pool.query(defaultValuesQuery);
+        const operatingHoursStart = defaultValuesResult.rows[0].operating_hours_start;
+        const operatingHoursEnd = defaultValuesResult.rows[0].operating_hours_end;
+
+        const today = moment().format('YYYY-MM-DD');
+        const operatingHoursStartTime = moment(`${today} ${operatingHoursStart}`, 'YYYY-MM-DD HH:mm:ss');
+        const operatingHoursEndTime = moment(`${today} ${operatingHoursEnd}`, 'YYYY-MM-DD HH:mm:ss');
+
+        console.log("Operating Hours Start Time: ", operatingHoursStartTime.format('YYYY-MM-DD HH:mm:ss'));
+        console.log("Operating Hours End Time: ", operatingHoursEndTime.format('YYYY-MM-DD HH:mm:ss'));
+
+        // Get list of jobs planned for the day (!!no machine_id)
+        const plannedJobsQuery = `
+            SELECT * FROM job_order 
+            WHERE 
+            job_start_time BETWEEN $1 AND $2
+            AND job_completion_status = false
+        `;
+        const plannedJobsResult = await pool.query(plannedJobsQuery, [ operatingHoursStartTime.format('YYYY-MM-DD HH:mm:ss'), operatingHoursEndTime.format('YYYY-MM-DD HH:mm:ss')]);
+        console.log(plannedJobsResult.rows);
+
+        // Initialize planned UPH categories
+        let plannedUph1 = 0;
+        let plannedUph2 = 0;
+        let plannedUph3 = 0;
+        let plannedUph4 = 0;
+
+        // Process each job
+        for (let job of plannedJobsResult.rows) {
+            const jobStartTime = moment(job.job_start_time, 'YYYY-MM-DD HH:mm:ss');
+            const jobEndTime = jobStartTime.clone().add(job.planned_duration_hrs, 'hours');
+            console.log("Job Start Time: ", jobStartTime.format('YYYY-MM-DD HH:mm:ss'));
+            console.log("Job End Time: ", jobEndTime.format('YYYY-MM-DD HH:mm:ss'));
+
+            // Job running for multiple days starting from today
+            if (jobEndTime.isSameOrAfter(operatingHoursEndTime) && jobStartTime.isSameOrAfter(operatingHoursStartTime)) {
+                plannedUph1 += job.planned_uph;
+                console.log("plannedUph1: ", plannedUph1);
+            }
+            // Job running for multiple days that started but not completing today
+            if (jobEndTime.isSameOrAfter(operatingHoursEndTime) && jobStartTime.isBefore(operatingHoursStartTime)) {
+                plannedUph2 += job.planned_uph;
+                console.log("plannedUph2: ", plannedUph2);
+            }
+            // Job running for multiple days that started and completing today
+            if (jobEndTime.isSameOrBefore(operatingHoursEndTime) && jobStartTime.isBefore(operatingHoursStartTime)) {
+                plannedUph3 += job.planned_uph;
+                console.log("plannedUph3: ", plannedUph3);
+            }
+            // Job starting and completing within today's operating hours
+            if (jobStartTime.isSameOrAfter(operatingHoursStartTime) && jobStartTime.isSameOrBefore(operatingHoursEndTime) && job.job_completion_status) {
+                plannedUph4 += job.planned_uph;
+                console.log("plannedUph4: ", plannedUph4);
+            }
+        }
+
+        const overallUph = plannedUph1 + plannedUph2 + plannedUph3 + plannedUph4;
+
+        // Calculate current UPH
+        const maxOutputQuery = `
+            SELECT MAX(total_output_qty) AS max_output
+            FROM oee_metrics 
+            WHERE 
+            machine_id = $1 AND timestamp <= $2
+            
+        `;
+        const minOutputQuery = `
+            SELECT MIN(total_output_qty) AS min_output
+            FROM oee_metrics 
+            WHERE machine_id = $1 AND timestamp >= $2
+        `;
+
+        const maxOutputResult = await pool.query(maxOutputQuery, [machineId, operatingHoursEndTime.format('YYYY-MM-DD HH:mm:ss')]);
+        const minOutputResult = await pool.query(minOutputQuery, [machineId, operatingHoursStartTime.format('YYYY-MM-DD HH:mm:ss')]);
+
+        const x = maxOutputResult.rows[0].max_output - minOutputResult.rows[0].min_output;
+
+        const machineStatusQuery = `
+            SELECT SUM(duration_minutes) AS total_duration 
+            FROM machine_status 
+            WHERE machine_id = $1 AND machine_status = 3 
+            AND status_start_time >= $2 
+            AND status_end_time <= $3
+        `;
+        const machineStatusResult = await pool.query(machineStatusQuery, [machineId, operatingHoursStartTime.format('YYYY-MM-DD HH:mm:ss'), operatingHoursEndTime.format('YYYY-MM-DD HH:mm:ss')]);
+        const y = machineStatusResult.rows[0].total_duration / 60;
+
+        const currentUph = Math.round(x / y);
+        const uphPercentage = Math.round((currentUph / overallUph) * 100);
+
+        res.json({
+            target: overallUph,
+            current: currentUph,
+            uphPercentageMachine:uphPercentage
+        });
+    } catch (err) {
+        console.error("Error executing query:", err.message);
+        res.status(500).send("Server Error");
+    }
+});
 
 module.exports = router;

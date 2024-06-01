@@ -25,16 +25,7 @@ const Machine = (props) => {
         setSelectedMachine(machineId);
     };
 
-	const oeeValue = 50;
-	const doughnutData = {
-		datasets: [
-			{
-				data: [oeeValue, 100 - oeeValue],
-				backgroundColor: ["#051548", "#33FAFF"], // Blue for OEE, light gray for remaining
-			},
-		],
-		labels: ["OEE", "Target"],
-	};
+	
 	const [machineData, setMachineData] = useState({
 		jobOrder: 0,
 		machineUptime: 0,
@@ -64,6 +55,24 @@ const Machine = (props) => {
 		scratches:0
 	});
 
+	const [machineUPHData, setMachineUPHData] = useState({
+		target:0,
+		current:0,
+		uphPercentageMachine:0
+	});
+
+
+	const doughnutData = {
+		datasets: [
+			{
+				data: [100, 100 - 50],
+				backgroundColor: ["#051548", "#33FAFF"], // Blue for UPH, light gray for remaining
+			},
+		],
+		labels: [`(%)`, `(%)`],
+	};
+
+	
 	// useEffect(() => {
 	// 	const fetchData = async () => {
 	// 		try {
@@ -116,6 +125,15 @@ const Machine = (props) => {
             }
             const visionResult = await visionResponse.json();
             setVisionData(visionResult);
+
+			const machineUPHResponse = await fetch(`http://localhost:5000/calculateMachineUPHdropDown?machineId=${machineId}`);
+            if (!machineUPHResponse.ok) {
+                throw new Error("Network response was not ok for /calculateMachineUPHdropDown");
+            }
+            const machineUPHResult = await machineUPHResponse.json();
+            setMachineUPHData(machineUPHResult);
+
+
         } catch (error) {
             console.error("Error fetching data:", error);
         }
@@ -125,7 +143,15 @@ const Machine = (props) => {
         fetchData(selectedMachine);
     }, [selectedMachine]);
 
-
+	const doughnutData2 = {
+		datasets: [
+			{
+				data: [machineUPHData.uphPercentageMachine, 100 - machineUPHData.uphPercentageMachine],
+				backgroundColor: ["#051548", "#33FAFF"], // Blue for UPH, light gray for remaining
+			},
+		],
+		labels: [`UPH(%)`, `Target(%)`],
+	};
 	return (
 		<>
 			<div className="header pb-8 pt-5 pt-md-8">
@@ -151,8 +177,8 @@ const Machine = (props) => {
                                                     value={selectedMachine}
 												>
 													<option value="M01">M01</option>
-                                                    <option value="M02">M02</option>
-                                                    <option value="M03">M03</option>
+                                                    <option value="M02" disabled>M02</option>
+                                                    <option value="M03" disabled>M03</option>
 												</select>
 											</h2>
 										</Col>
@@ -397,7 +423,7 @@ const Machine = (props) => {
 																>
 																	{" "}
 																	<h6 className=" text-muted ls-1 mb-1">
-																		Target: 80
+																		Target: {machineUPHData.target}
 																	</h6>
 																</td>
 																<td
@@ -405,7 +431,7 @@ const Machine = (props) => {
 																>
 																	{" "}
 																	<h6 className=" text-muted ls-1 mb-1">
-																		Actual: 40
+																		Current: {machineUPHData.current}
 																	</h6>
 																</td>
 															</tr>
@@ -424,7 +450,7 @@ const Machine = (props) => {
 														}}
 													>
 														<Doughnut
-															data={doughnutData}
+															data={doughnutData2}
 															options={{
 																...doughnutOptions,
 																legend: {
