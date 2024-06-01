@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Doughnut } from "react-chartjs-2";
+import host from "./host.js";
 import { formatDate, formatDateWithTimezone } from "./helper";
 import {
 	Card,
@@ -14,6 +15,8 @@ import pflImage from "../assets/img/machine.png";
 import { doughnutOptions } from "./chartOptions.js";
 import moment from "moment";
 const Machine = (props) => {
+	const localhost = host.localhost;
+
 	// const today = moment().format('YYYY-MM-DD');
 	const today = moment().subtract(1, 'days').format('YYYY-MM-DD');
 	const [fromDate, setFromDate] = useState(today);
@@ -100,11 +103,11 @@ const Machine = (props) => {
 	const doughnutData = {
 		datasets: [
 			{
-				data: [100, 100 - 50],
+				data: [100-machineOEEData.oee, machineOEEData.oee],
 				backgroundColor: ["#051548", "#33FAFF"], // Blue for UPH, light gray for remaining
 			},
 		],
-		labels: [`(%)`, `(%)`],
+		labels: [`Target(%)`, `OEE(%)`],
 	};
 
 
@@ -140,28 +143,28 @@ const Machine = (props) => {
 
 	const fetchData = async (machineId) => {
 		try {
-			const machineResponse = await fetch(`http://localhost:5000/getMachineLive?machineId=${machineId}`);
+			const machineResponse = await fetch(`http://${localhost}:5000/getMachineLive?machineId=${machineId}`);
 			if (!machineResponse.ok) {
 				throw new Error("Network response was not ok for /getMachineLive");
 			}
 			const machineResult = await machineResponse.json();
 			setMachineData(machineResult);
 
-			const testerResponse = await fetch(`http://localhost:5000/getTesterLive?machineId=${machineId}`);
+			const testerResponse = await fetch(`http://${localhost}:5000/getTesterLive?machineId=${machineId}`);
 			if (!testerResponse.ok) {
 				throw new Error("Network response was not ok for /getTesterLive");
 			}
 			const testerResult = await testerResponse.json();
 			setTesterData(testerResult);
 
-			const visionResponse = await fetch(`http://localhost:5000/getVisionLive?machineId=${machineId}`);
+			const visionResponse = await fetch(`http://${localhost}:5000/getVisionLive?machineId=${machineId}`);
 			if (!visionResponse.ok) {
 				throw new Error("Network response was not ok for /getVisionLive");
 			}
 			const visionResult = await visionResponse.json();
 			setVisionData(visionResult);
 
-			const machineUPHResponse = await fetch(`http://localhost:5000/calculateMachineUPHdropDown?machineId=${machineId}`);
+			const machineUPHResponse = await fetch(`http://${localhost}:5000/calculateMachineUPHdropDown?machineId=${machineId}`);
 			if (!machineUPHResponse.ok) {
 				throw new Error("Network response was not ok for /calculateMachineUPHdropDown");
 			}
@@ -169,7 +172,7 @@ const Machine = (props) => {
 			setMachineUPHData(machineUPHResult);
 
 			const machineOEEResponse = await fetch(
-				`http://localhost:5000/calculateMachineOEEdropDown?startTime=${formatDateWithTimezone(
+				`http://${localhost}:5000/calculateMachineOEEdropDown?startTime=${formatDateWithTimezone(
 					fromDate
 				)}&endTime=${formatDateWithTimezone(
 					toDate

@@ -11,13 +11,12 @@ import {
 	, Table
 } from "reactstrap";
 import pflImage from "../assets/img/pfl.png";
-
+import host from './host.js';
 // core components
 import { doughnutOptions } from "./chartOptions.js";
 
 const Summary = (props) => {
-
-
+	const localhost = host.localhost;
 	const getBadgeStyle = (status) => {
 		return {
 			backgroundColor: getStatusColor(status),
@@ -70,7 +69,7 @@ const Summary = (props) => {
 				const now = new Date();
 				setLastUpdate(`${now.getHours()}:${now.getMinutes() < 10 ? '0' : ''}${now.getMinutes()} ${now.getHours() >= 12 ? 'pm' : 'am'}`);
 
-				const response = await fetch('http://localhost:5000/getOverview');
+				const response = await fetch(`http://${localhost}:5000/getOverview`);
 				if (!response.ok) {
 					throw new Error('Network response was not ok');
 				}
@@ -78,7 +77,7 @@ const Summary = (props) => {
 				const result = await response.json();
 				setData(result);
 
-				const UPHresponse = await fetch('http://localhost:5000/calculateOverallUPH');
+				const UPHresponse = await fetch(`http://${localhost}:5000/calculateOverallUPH`);
 				if (!UPHresponse.ok) {
 					throw new Error('Network response was not ok');
 				}
@@ -86,7 +85,7 @@ const Summary = (props) => {
 				const UPHresult = await UPHresponse.json();
 				setUPH(UPHresult);
 
-				const machineUPHresponse = await fetch('http://localhost:5000/calculateMachineUPH');
+				const machineUPHresponse = await fetch(`http://${localhost}:5000/calculateMachineUPH`);
 				if (!machineUPHresponse.ok) {
 					throw new Error('Network response was not ok');
 				}
@@ -94,7 +93,7 @@ const Summary = (props) => {
 				const machineUPHresult = await machineUPHresponse.json();
 				setMachineUPHData(machineUPHresult.machineUphData);
 
-				const machineStatusResponse = await fetch('http://localhost:5000/getMachineStatus');
+				const machineStatusResponse = await fetch(`http://${localhost}:5000/getMachineStatus`);
 				if (!machineStatusResponse.ok) {
 					throw new Error('Network response was not ok');
 				}
@@ -319,7 +318,6 @@ const Summary = (props) => {
 										</td>
 
 									</tr>
-
 								</Table>
 							</CardBody>
 						</Card>
