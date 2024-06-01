@@ -1,9 +1,10 @@
 import Chart from "chart.js";
 import classnames from "classnames";
 import pflImage from "../assets/img/pfl.png";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bar, Line, Pie, Doughnut } from "react-chartjs-2";
 import { barChartOptions, doughnutOptions } from "./chartOptions.js";
+import { formatDate, formatDateWithTimezone } from "./helper";
 import {
 	Button,
 	Card,
@@ -22,81 +23,263 @@ import {
 import Pagination from "components/Pagination";
 
 const Performance = (props) => {
-	const barChartData = {
-		labels: ["A", "B", "C", "D", "E", "F", "J", "K", "M"],
-		datasets: [
-			{
-				label: "Performance",
-				backgroundColor: "rgba(166,167,247,1)",
-				data: [65, 59, 80, 81, 56, 55, 40, 20, 50, 80],
-			},
-		],
+
+	const getMalaysiaDate = () => {
+		const now = new Date();
+		const utcTime = now.getTime() + now.getTimezoneOffset() * 6000;
+		const malaysiaTime = new Date(utcTime + 8 * 3600000); // Malaysia is UTC+8
+		return malaysiaTime.toISOString().split("T")[0];
+	};
+	const today = getMalaysiaDate(); // Get today's date in YYYY-MM-DD format
+	const [fromDate, setFromDate] = useState(today);
+	const [toDate, setToDate] = useState(today);
+	const [machineID, setMachineID] = useState("");
+
+	// Handle date changes and ensure they don't exceed today's date
+	const handleFromDateChange = (e) => {
+		console.log(e.target.value);
+		const selectedDate = e.target.value;
+		if (selectedDate <= today) {
+			setFromDate(selectedDate);
+		}
 	};
 
-	const doughnutData = {
-		datasets: [
-			{
-				data: [30, 40, 50],
-				backgroundColor: ["#051548", "#33FAFF", "#a0a0a0"],
-			},
-		],
-		labels: ["A", "B", "C"],
+	const handleToDateChange = (e) => {
+		const selectedDate = e.target.value;
+		if (selectedDate <= today) {
+			setToDate(selectedDate);
+		}
 	};
 
-	const sampleData = [
-		{
-			machine: "A",
-			date: "2024-05-12",
-			cycleTime: 10,
-			target: 12,
-			output: 100,
-			runTime: "10",
-			performance: "85%",
+	const handleMachineIDChange = (e) => {
+		setMachineID(e.target.value);
+	};
+
+	const handleFormSubmit = (e) => {
+		e.preventDefault();
+	};
+
+	useEffect(() => {
+		setFromDate(today);
+		setToDate(today);
+	}, [today]);
+
+	//get Overall run time
+	const [overallRunTime, setOverallRunTime] = useState("");
+	const fetchOverallRunTime = async () => {
+		try {
+			const response = await fetch(
+				`http://localhost:5000/getOverallRunTime?startTime=${formatDateWithTimezone(
+					fromDate
+				)}&endTime=${formatDateWithTimezone(
+					toDate
+				)}&machineId=${machineID}`
+			);
+
+			if (!response.ok) {
+				throw new Error("Failed to fetch data");
+			}
+			const data = await response.json();
+			if (
+				data.overall_run_time === undefined ||
+				data.overall_run_time === null
+			) {
+				// Check if overall_run_time is undefined
+				setOverallRunTime(`-`);
+				return;
+			}
+			setOverallRunTime(data.overall_run_time);
+			return;
+		} catch (e) {}
+	};
+
+	//get Overall Performance
+	const [overallPerformance, setOverallPerformance] = useState("");
+	const fetchOverallPerformance = async () => {
+		try {
+			const response = await fetch(
+				`http://localhost:5000/getOverallPerformance?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`
+			);
+
+			if (!response.ok) {
+				throw new Error("Failed to fetch data");
+			}
+			const data = await response.json();
+			if (
+				data.overall_performance === undefined ||
+				data.overall_performance === null
+			) {
+				setOverallPerformance(`-`);
+				return;
+			}
+			let percentage = data.overall_performance * 100;
+			setOverallPerformance(`${percentage}%`);
+			return;
+		} catch (e) {}
+	};
+
+	// bar chart
+
+	const [barChartData, setBarChartData] = useState({
+		labels: [],
+		dataset: [],
+	});
+
+	const [barChartError, setBarchartError] = useState("");
+	const barChartOption = {
+		...barChartOptions,
+		tooltips: {
+			callbacks: {
+				label: function (tooltipItem, data) {
+					const value = tooltipItem.yLabel;
+					return `${value}%`;
+				},
+			},
 		},
-		{
-			machine: "B",
-			date: "2024-05-12",
-			cycleTime: 8,
-			target: 10,
-			output: 120,
-			runTime: "12",
-			performance: "90%",
-		},
-		{
-			machine: "C",
-			date: "2024-05-12",
-			cycleTime: 12,
-			target: 15,
-			output: 80,
-			runTime: "11",
-			performance: "80%",
-		},
-		{
-			machine: "D",
-			date: "2024-05-12",
-			cycleTime: 9,
-			target: 11,
-			output: 110,
-			runTime: "10",
-			performance: "95%",
-		},
-		{
-			machine: "E",
-			date: "2024-05-12",
-			cycleTime: 11,
-			target: 14,
-			output: 95,
-			runTime: "13",
-			performance: "68%",
-		},
-	];
+	};
+	const fetchBarChartData = async () => {
+		try {
+			const response = await fetch(
+				`http://localhost:5000/performanceBarChart?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`
+			);
+
+			if (!response.ok) {
+				throw new Error("Failed to fetch data");
+			}
+			const data = await response.json();
+			console.log(data.performance);
+			if (data.length === 0) {
+				setBarchartError("No data found");
+				return;
+			} else {
+				setBarchartError("");
+			}
+
+			const options = {
+				timeZone: "Asia/Kuala_Lumpur",
+				year: "numeric",
+				month: "2-digit",
+				day: "2-digit",
+			};
+
+			const labels = data.map((item) =>
+				new Date(item.timestamp).toLocaleString("en-MY", options)
+			);
+			const performance = data.map((item) => item.performance * 100);
+			setBarChartData({
+				labels: labels,
+				datasets: [
+					{
+						label: "Performance",
+						data: performance,
+						backgroundColor: "rgba(75, 192, 192, 0.6)",
+					},
+				],
+			});
+		} catch (error) {
+			console.error("Error fetching data:", error.message);
+		}
+	};
+
+	// doughnut chart
+
+	const [doughnutData, setDoughnutChartData] = useState({
+		labels: [],
+		datasets: [],
+	});
+	const [doughnutError, setDoughnutError] = useState("");
+	const doughnutOption = {
+		...doughnutOptions,
+			// tooltips: {
+			//   callbacks: {
+			// 	label: function (context) {
+			// 	  const value = context.x;
+			// 	  console.log(context)
+			// 	  return `${context.label}: ${value}%`;
+			// 	},
+			//   },
+			// },
+		  
+	};
+	const fetchDoughnutData = async () => {
+		try {
+			let url = `http://localhost:5000/performanceDoughnutChart?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`;
+			const response = await fetch(url);
+			const data = await response.json();
+			if (data.length === 0) {
+				setDoughnutError("No data found");
+				setDoughnutChartData({
+					labels: [],
+					datasets: [],
+				});
+				return;
+			} else {
+				setDoughnutError("");
+			}
+
+			let labels = data.map((d) => d.machine_id);
+			let dataset = data.map((d) => d.performance * 100);
+			console.log(dataset);
+			setDoughnutChartData({
+				labels: labels,
+				datasets: [
+					{
+						label: "Overall Performance",
+						data: dataset,
+					},
+				],
+			});
+		} catch (error) {
+			console.error("Error fetching data:", error);
+		}
+	};
+
+	// summary table
+	const [summaryTable, setSummaryTable] = useState([]);
+	const [summaryTableError, setSummaryTableError] = useState("");
+
+	const fetchSummaryTableData = async () => {
+		try {
+			let url = `http://localhost:5000/performanceSummary?startTime=${formatDateWithTimezone(fromDate)}&endTime=${formatDateWithTimezone(toDate)}&machineId=${machineID}`;
+			const response = await fetch(url);
+			const data = await response.json();
+			console.log(data)
+			if (data.length === 0) {
+				setSummaryTableError("No data found");
+			} else {
+				setSummaryTableError("");
+			}
+			setSummaryTable(data);
+			return;
+		} catch (error) {
+			console.error("Error fetching data:", error);
+		}
+	};
+
+	useEffect(() => {
+		fetchSummaryTableData();
+		fetchDoughnutData();
+		fetchBarChartData();
+		fetchOverallRunTime();
+		fetchOverallPerformance();
+	}, [fromDate, toDate, machineID]);
+
+	const options = {
+		timeZone: "Asia/Kuala_Lumpur",
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
+		hour: "2-digit",
+		minute: "2-digit",
+		second: "2-digit",
+	};
 
 	const [currentPage, setCurrentPage] = useState(1);
 	let pageSize = 4;
 
 	const firstPageIndex = (currentPage - 1) * pageSize;
 	const lastPageIndex = firstPageIndex + pageSize;
-	const currentTableData = sampleData.slice(firstPageIndex, lastPageIndex);
+	const currentTableData = summaryTable.slice(firstPageIndex, lastPageIndex);
 
 	return (
 		<>
@@ -112,13 +295,18 @@ const Performance = (props) => {
 									borderRadius: "10px",
 								}}
 							>
-								<form className="text-center d-flex align-items-center">
+								<form
+									className="text-center d-flex align-items-center"
+									onSubmit={handleFormSubmit}
+								>
 									<label for="fromDate" className="mb-0 mr-2">
 										From:{" "}
 									</label>
 									<input
 										type="date"
 										id="fromDate"
+										onChange={handleFromDateChange}
+										value={fromDate}
 										className="form-control mr-2 p-1"
 										style={{ height: "fit-content" }}
 									></input>
@@ -129,8 +317,27 @@ const Performance = (props) => {
 									<input
 										type="date"
 										id="toDate"
+										onChange={handleToDateChange}
+										value={toDate}
 										className="form-control mr-2 p-1"
 										style={{ height: "fit-content" }}
+									></input>
+
+									<label
+										for="machineID"
+										className="mb-0 mr-2"
+									>
+										MachineID:{" "}
+									</label>
+
+									<input
+										type="text"
+										id="machineID"
+										onChange={handleMachineIDChange}
+										value={machineID}
+										className="form-control mr-2 p-1"
+										style={{ height: "fit-content" }}
+										placeholder="machineID"
 									></input>
 
 									<input
@@ -209,7 +416,7 @@ const Performance = (props) => {
 													Overall Run Time
 												</CardTitle>
 												<span className="h2 font-weight-bold mb-0">
-													60
+													{overallRunTime}
 												</span>
 											</div>
 										</Row>
@@ -231,7 +438,7 @@ const Performance = (props) => {
 													Overall Performance
 												</CardTitle>
 												<span className="h2 font-weight-bold mb-0">
-													97%
+													{overallPerformance}
 												</span>
 											</div>
 										</Row>
@@ -246,7 +453,7 @@ const Performance = (props) => {
 									<CardBody>
 										<Bar
 											data={barChartData}
-											options={barChartOptions}
+											options={barChartOption}
 										/>
 									</CardBody>
 								</Card>
@@ -257,7 +464,7 @@ const Performance = (props) => {
 									<CardBody>
 										<Doughnut
 											data={doughnutData}
-											options={doughnutOptions}
+											options={doughnutOption}
 										/>
 									</CardBody>
 								</Card>
@@ -294,25 +501,29 @@ const Performance = (props) => {
 													(data, index) => (
 														<tr key={index}>
 															<td>
-																{data.machine}
+																{data.machine_id}
 															</td>
-															<td>{data.date}</td>
 															<td>
-																{data.cycleTime}
+															{new Date(
+																data.timestamp
+															).toLocaleString(
+																"en-MY",
+																options
+															)}</td>
+															<td>
+																{data.cycle_time}
 															</td>
 															<td>
 																{data.target}
 															</td>
 															<td>
-																{data.output}
+																{data.sum_output_qty}
 															</td>
 															<td>
-																{data.runTime}
+																{data.run_time}
 															</td>
 															<td>
-																{
-																	data.performance
-																}
+																{data.performance}
 															</td>
 														</tr>
 													)
@@ -327,7 +538,7 @@ const Performance = (props) => {
 																currentPage
 															}
 															totalCount={
-																sampleData.length
+																summaryTable.length
 															}
 															pageSize={pageSize}
 															onPageChange={(
