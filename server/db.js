@@ -4,7 +4,7 @@ console.log('Starting script');  // Added logging
 
 const pool = new Pool({
   user: 'postgres',
-  password: '1234',
+  password: 'jkty12138',
   host: 'localhost',
   port: 5432,
   database: "oee",

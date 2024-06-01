@@ -28,8 +28,8 @@ router.get("/getOverview", async (req, res) => {
 
         // Get today's date
         const today = new Date();
-        const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
-        const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+        const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()-1, 0, 0, 0);
+        const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()-1, 23, 59, 59);
 
         // Query to get total output for today
         const queryTotalOutput = `
@@ -109,7 +109,8 @@ router.get('/calculateOverallUPH', async (req, res) => {
         const operatingHoursStart = defaultValuesResult.rows[0].operating_hours_start;
         const operatingHoursEnd = defaultValuesResult.rows[0].operating_hours_end;
 
-        const today = moment().format('YYYY-MM-DD');
+        // const today = moment().format('YYYY-MM-DD');
+        const today = moment().subtract(1, 'days').format('YYYY-MM-DD');
         const operatingHoursStartTime = moment(`${today} ${operatingHoursStart}`, 'YYYY-MM-DD HH:mm:ss');
         const operatingHoursEndTime = moment(`${today} ${operatingHoursEnd}`, 'YYYY-MM-DD HH:mm:ss');
 
@@ -213,7 +214,8 @@ router.get('/calculateMachineUPH', async (req, res) => {
         const operatingHoursStart = defaultValuesResult.rows[0].operating_hours_start;
         const operatingHoursEnd = defaultValuesResult.rows[0].operating_hours_end;
 
-        const today = moment().format('YYYY-MM-DD');
+        // const today = moment().format('YYYY-MM-DD');
+        const today = moment().subtract(1, 'days').format('YYYY-MM-DD');
         const operatingHoursStartTime = moment(today + ' ' + operatingHoursStart, 'YYYY-MM-DD HH:mm:ss');
         const operatingHoursEndTime = moment(today + ' ' + operatingHoursEnd, 'YYYY-MM-DD HH:mm:ss');
 

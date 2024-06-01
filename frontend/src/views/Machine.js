@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Doughnut } from "react-chartjs-2";
+import { formatDate, formatDateWithTimezone } from "./helper";
 import {
 	Card,
 	CardBody,
@@ -11,21 +12,46 @@ import {
 } from "reactstrap";
 import pflImage from "../assets/img/machine.png";
 import { doughnutOptions } from "./chartOptions.js";
-
+import moment from "moment";
 const Machine = (props) => {
+	// const today = moment().format('YYYY-MM-DD');
+	const today = moment().subtract(1, 'days').format('YYYY-MM-DD');
+	const [fromDate, setFromDate] = useState(today);
+	const [toDate, setToDate] = useState(today);
+
 	const [selectedPage, setSelectedPage] = useState("Live");
-    const [selectedMachine, setSelectedMachine] = useState("M01");
+	const [selectedMachine, setSelectedMachine] = useState("M01");
+
+	// Handle date changes and ensure they don't exceed today's date
+	const handleFromDateChange = (e) => {
+		console.log(e.target.value);
+		const selectedDate = e.target.value;
+		if (selectedDate <= today) {
+			setFromDate(selectedDate);
+		}
+	};
+
+	const handleToDateChange = (e) => {
+		const selectedDate = e.target.value;
+		if (selectedDate <= today) {
+			setToDate(selectedDate);
+		}
+	};
+	const handleFormSubmit = (e) => {
+		e.preventDefault();
+	};
+
 
 	const handlePageChange = (page) => {
 		setSelectedPage(page);
 	};
 
 	const handleMachineChange = (e) => {
-        const machineId = e.target.value;
-        setSelectedMachine(machineId);
-    };
+		const machineId = e.target.value;
+		setSelectedMachine(machineId);
+	};
 
-	
+
 	const [machineData, setMachineData] = useState({
 		jobOrder: 0,
 		machineUptime: 0,
@@ -51,16 +77,21 @@ const Machine = (props) => {
 		flowmark: 0,
 		burrno: 0,
 		coloruneven: 0,
-		color:0,
-		scratches:0
+		color: 0,
+		scratches: 0
 	});
 
 	const [machineUPHData, setMachineUPHData] = useState({
-		target:0,
-		current:0,
-		uphPercentageMachine:0
+		target: 0,
+		current: 0,
+		uphPercentageMachine: 0
 	});
 
+	const [machineOEEData, setMachineOEEData] = useState({
+		target: 0,
+            actual:0,
+            reject:0
+	});
 
 	const doughnutData = {
 		datasets: [
@@ -72,7 +103,7 @@ const Machine = (props) => {
 		labels: [`(%)`, `(%)`],
 	};
 
-	
+
 	// useEffect(() => {
 	// 	const fetchData = async () => {
 	// 		try {
@@ -104,44 +135,62 @@ const Machine = (props) => {
 	// }, []);
 
 	const fetchData = async (machineId) => {
-        try {
-            const machineResponse = await fetch(`http://localhost:5000/getMachineLive?machineId=${machineId}`);
-            if (!machineResponse.ok) {
-                throw new Error("Network response was not ok for /getMachineLive");
-            }
-            const machineResult = await machineResponse.json();
-            setMachineData(machineResult);
+		try {
+			const machineResponse = await fetch(`http://localhost:5000/getMachineLive?machineId=${machineId}`);
+			if (!machineResponse.ok) {
+				throw new Error("Network response was not ok for /getMachineLive");
+			}
+			const machineResult = await machineResponse.json();
+			setMachineData(machineResult);
 
-            const testerResponse = await fetch(`http://localhost:5000/getTesterLive?machineId=${machineId}`);
-            if (!testerResponse.ok) {
-                throw new Error("Network response was not ok for /getTesterLive");
-            }
-            const testerResult = await testerResponse.json();
-            setTesterData(testerResult);
+			const testerResponse = await fetch(`http://localhost:5000/getTesterLive?machineId=${machineId}`);
+			if (!testerResponse.ok) {
+				throw new Error("Network response was not ok for /getTesterLive");
+			}
+			const testerResult = await testerResponse.json();
+			setTesterData(testerResult);
 
-            const visionResponse = await fetch(`http://localhost:5000/getVisionLive?machineId=${machineId}`);
-            if (!visionResponse.ok) {
-                throw new Error("Network response was not ok for /getVisionLive");
-            }
-            const visionResult = await visionResponse.json();
-            setVisionData(visionResult);
+			const visionResponse = await fetch(`http://localhost:5000/getVisionLive?machineId=${machineId}`);
+			if (!visionResponse.ok) {
+				throw new Error("Network response was not ok for /getVisionLive");
+			}
+			const visionResult = await visionResponse.json();
+			setVisionData(visionResult);
 
 			const machineUPHResponse = await fetch(`http://localhost:5000/calculateMachineUPHdropDown?machineId=${machineId}`);
-            if (!machineUPHResponse.ok) {
-                throw new Error("Network response was not ok for /calculateMachineUPHdropDown");
-            }
-            const machineUPHResult = await machineUPHResponse.json();
-            setMachineUPHData(machineUPHResult);
+			if (!machineUPHResponse.ok) {
+				throw new Error("Network response was not ok for /calculateMachineUPHdropDown");
+			}
+			const machineUPHResult = await machineUPHResponse.json();
+			setMachineUPHData(machineUPHResult);
+
+			const machineOEEResponse =  await fetch(
+				`http://localhost:5000/calculateMachineUPHdropDown?startTime=${formatDateWithTimezone(
+					fromDate
+				)}&endTime=${formatDateWithTimezone(
+					toDate
+				)}&machineId=${machineId}`
+			);
+			if (!machineOEEResponse.ok) {
+				throw new Error("Network response was not ok for /calculateMachineUPHdropDown");
+			}
+			const machineOEEResult = await machineOEEResponse.json();
+			setMachineOEEData(machineOEEResult);
 
 
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        }
-    };
+		} catch (error) {
+			console.error("Error fetching data:", error);
+		}
+	};
 
-    useEffect(() => {
-        fetchData(selectedMachine);
-    }, [selectedMachine]);
+	useEffect(() => {
+		fetchData(selectedMachine);
+	}, [selectedMachine]);
+
+	useEffect(() => {
+		setFromDate(today);
+		setToDate(today);
+	}, [today]);
 
 	const doughnutData2 = {
 		datasets: [
@@ -174,11 +223,10 @@ const Machine = (props) => {
 														fontSize: "1rem",
 													}}
 													onChange={handleMachineChange}
-                                                    value={selectedMachine}
+													value={selectedMachine}
 												>
 													<option value="M01">M01</option>
-                                                    <option value="M02" disabled>M02</option>
-                                                    <option value="M03" disabled>M03</option>
+													<option value="M02">M02</option>
 												</select>
 											</h2>
 										</Col>
@@ -262,13 +310,16 @@ const Machine = (props) => {
 														borderRadius: "10px",
 													}}
 												>
-													<form className="text-center d-flex align-items-center" >
+													<form className="text-center d-flex align-items-center"
+														onSubmit={handleFormSubmit}>
 														<label htmlFor="fromDate" className="mb-0 mr-2">
 															From:{" "}
 														</label>
 														<input
 															type="date"
 															id="fromDate"
+															onChange={handleFromDateChange}
+															value={fromDate}
 															className="form-control mr-2 p-1"
 															style={{ height: "fit-content", width: '100px' }}
 														></input>
@@ -279,6 +330,8 @@ const Machine = (props) => {
 														<input
 															type="date"
 															id="toDate"
+															onChange={handleToDateChange}
+															value={toDate}
 															className="form-control mr-2 p-1"
 															style={{ height: "fit-content", width: '100px' }}
 														></input>
@@ -303,7 +356,7 @@ const Machine = (props) => {
 																>
 																	{" "}
 																	<h6 className=" text-muted ls-1 mb-1">
-																		Target: 800
+																		Target: {machineOEEData.target}
 																	</h6>
 																</td>
 																<td
@@ -311,7 +364,7 @@ const Machine = (props) => {
 																>
 																	{" "}
 																	<h6 className=" text-muted ls-1 mb-1">
-																		Actual: 47
+																		Actual: {machineOEEData.actual}
 																	</h6>
 																</td>
 																<td
@@ -319,7 +372,7 @@ const Machine = (props) => {
 																>
 																	{" "}
 																	<h6 className=" text-muted ls-1 mb-1">
-																		Reject: 3
+																		Reject: {machineOEEData.reject}
 																	</h6>
 																</td>
 															</tr>
