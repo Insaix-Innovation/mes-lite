@@ -89,8 +89,12 @@ const Machine = (props) => {
 
 	const [machineOEEData, setMachineOEEData] = useState({
 		target: 0,
-            actual:0,
-            reject:0
+		actual: 0,
+		reject: 0,
+		availability: 0,
+		performance: 0,
+		quality: 0,
+		oee:0
 	});
 
 	const doughnutData = {
@@ -164,8 +168,8 @@ const Machine = (props) => {
 			const machineUPHResult = await machineUPHResponse.json();
 			setMachineUPHData(machineUPHResult);
 
-			const machineOEEResponse =  await fetch(
-				`http://localhost:5000/calculateMachineUPHdropDown?startTime=${formatDateWithTimezone(
+			const machineOEEResponse = await fetch(
+				`http://localhost:5000/calculateMachineOEEdropDown?startTime=${formatDateWithTimezone(
 					fromDate
 				)}&endTime=${formatDateWithTimezone(
 					toDate
@@ -281,8 +285,8 @@ const Machine = (props) => {
 									<Row className="align-items-center">
 										<div className="col">
 											<h3 className="mb-0">
-												Assets Info
-											</h3>
+												Assets Info 
+											</h3> 
 										</div>
 
 										<div
@@ -423,7 +427,7 @@ const Machine = (props) => {
 																	border: "none",
 																}}
 															>
-																: 80%
+																: {machineOEEData.availability} %
 															</td>
 														</tr>
 														<tr>
@@ -441,7 +445,7 @@ const Machine = (props) => {
 																	border: "none",
 																}}
 															>
-																: 80%
+																: {machineOEEData.performance} %
 															</td>
 														</tr>
 														<tr>
@@ -459,7 +463,7 @@ const Machine = (props) => {
 																	border: "none",
 																}}
 															>
-																: 80%
+																: {machineOEEData.quality} %
 															</td>
 														</tr>
 													</Table>

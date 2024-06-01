@@ -553,16 +553,54 @@ router.get('/calculateMachineOEEdropDown', async (req, res) => {
         const rejectResult = await pool.query(rejectQuery, [machineId, formattedStartTime, formattedEndTime]);
         const reject = rejectResult.rows[0].reject || 0;
 
-       
+        //!!!Current A&P&Q is set to integer in database, remove two zero on line 588 if needed
+        // Calculate Availability
+        const availabilityQuery = `
+            SELECT AVG(availability) as avg_availability 
+            FROM oee_calculated
+            WHERE machine_id = $1 
+            AND timestamp BETWEEN $2 AND $3
+        `;
+        const availabilityResult = await pool.query(availabilityQuery, [machineId, formattedStartTime, formattedEndTime]);
+        const availability = availabilityResult.rows[0].avg_availability || 0;
+
+        // Retrieve Performance
+        const performanceQuery = `
+            SELECT AVG(performance) as avg_performance 
+            FROM oee_calculated 
+            WHERE machine_id = $1 
+            AND timestamp BETWEEN $2 AND $3
+        `;
+        const performanceResult = await pool.query(performanceQuery, [machineId, formattedStartTime, formattedEndTime]);
+        const performance = performanceResult.rows[0].avg_performance || 0;
+
+        // Retrieve Quality
+        const qualityQuery = `
+            SELECT AVG(quality) as avg_quality 
+            FROM oee_calculated 
+            WHERE machine_id = $1 
+            AND timestamp BETWEEN $2 AND $3
+        `;
+        const qualityResult = await pool.query(qualityQuery, [machineId, formattedStartTime, formattedEndTime]);
+        const quality = qualityResult.rows[0].avg_quality || 0;
+
+        // Calculate OEE
+        const oee = Math.round((availability * performance * quality) / 10000);
 
         res.json({
             target: overallUph,
             actual,
-            reject
+            reject,
+            availability: Math.round(availability),
+            performance: Math.round(performance),
+            quality: Math.round(quality),
+            oee
         });
     } catch (err) {
         console.error("Error executing query:", err.message);
         res.status(500).send("Server Error");
     }
 });
+
+
 module.exports = router;
