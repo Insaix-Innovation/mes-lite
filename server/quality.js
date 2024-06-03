@@ -3,92 +3,45 @@ const router = express.Router();
 const pool = require("./db");
 const moment = require("moment");
 
-router.get("/getOverallRunTime", async (req, res) => {
+router.get("/rejectsParetoBarChart", async (req, res) => {
 	try {
 		const { startTime, endTime, machineId } = req.query;
-
-		// 	let query = `SELECT SUM(duration_minutes) AS overall_run_time
-		//     FROM machine_status
-		//     WHERE machine_status = 3
-		//       AND status_start_time >= $1
-		//       AND status_end_time <= $2
-		// ${machineId ? "AND machine_id = $3" : ""}
-		//   `;
+		const startDateWithTZ = moment(
+			`${startTime}`,
+			"YYYY-MM-DD HH:mm:ss.SSSSSS+08"
+		);
+		const endDateWithTZ = moment(
+			`${endTime}`,
+			"YYYY-MM-DD HH:mm:ss.SSSSSS+08"
+		);
 		let query = `
-	SELECT AVG(overall_run_times) AS overall_run_time
-	FROM (
-	  SELECT machine_id, SUM(duration_minutes) AS overall_run_times
-	  FROM machine_status
-	  WHERE machine_status = 3
-		AND status_start_time >= $1
-		AND status_end_time <= $2
-		${machineId ? "AND machine_id = $3" : ""} -- Conditionally filter by machine ID
-	  GROUP BY machine_id
-	) AS machine_runtimes
-  `;
-		let values = [startTime, endTime];
-		if (machineId) {
-			values.push(machineId);
-		}
-		const { rows } = await pool.query(query, values);
-		res.json({
-			overall_run_time: Math.round(rows[0].overall_run_time),
-		});
-	} catch (error) {
-		console.error("Error executing PostgreSQL query:", error);
-		res.status(500).json({ error: "An internal server error occurred" });
-	}
-});
-
-router.get("/getOverallPerformance", async (req, res) => {
-	try {
-		const { startTime, endTime, machineId } = req.query;
-		// 	const query = `SELECT AVG(performance) AS overall_performance
-		//     FROM oee_calculated
-		//     WHERE timestamp >= $1::date
-		//       AND timestamp <= $2::date
-		//       AND machine_id = $3;
-		//   `;
-		let query = `SELECT AVG(daily_performance) AS overall_performance
-		FROM (
-		SELECT DATE(timestamp) AS date,
-				AVG(performance) AS daily_performance
-		FROM oee_calculated
-		WHERE timestamp >= $1 AND timestamp < $2
-		${machineId ? "AND machine_id = $3" : ""}
-		GROUP BY DATE(timestamp)
-		) AS daily_performance_summary`;
-
-		let values = [startTime, endTime];
-		if (machineId) {
-			values.push(machineId);
-		}
-		const { rows } = await pool.query(query, values);
-
-		let overallPerformance = rows[0].overall_performance || 0;
-		res.json({
-			overall_performance: parseFloat(overallPerformance.toFixed(2)),
-		});
-	} catch (error) {
-		console.error("Error executing PostgreSQL query:", error);
-		res.status(500).json({ error: "An internal server error occurred" });
-	}
-});
-
-router.get("/performanceBarChart", async (req, res) => {
-	try {
-		const { startTime, endTime, machineId } = req.query;
-
-		let query = `
-				SELECT timestamp,
-					AVG(performance) AS performance
-				FROM oee_calculated
-				WHERE timestamp >= $1 AND timestamp < $2
-				${machineId ? "AND machine_id = $3" : ""}
-				GROUP BY timestamp
-				ORDER BY timestamp ASC
+        SELECT
+        SUM(tester_data.fail_live_no) AS total_fail_live_no,
+        SUM(tester_data.fail_neutral_no) AS total_fail_neutral_no,
+        SUM(tester_data.fail_earth_no) AS total_fail_earth_no,
+        SUM(tester_data.fail_livexneutral_no) AS total_fail_livexneutral_no,
+        SUM(tester_data.fail_neutralxearth_no) AS total_fail_neutralxearth_no,
+        SUM(tester_data.fail_earthxlive_no) AS total_fail_earthxlive_no,
+        SUM(tester_data.short_when_off_no) AS total_short_when_off_no,
+        SUM(vision_data.flow_mark_no) AS total_flow_mark_no,
+        SUM(vision_data.burr_no) AS total_burr_no,
+        SUM(vision_data.colour_uneven_no) AS total_colour_uneven_no,
+        SUM(vision_data.colour_no) AS total_colour_no,
+        SUM(vision_data.scratches_no) AS total_scratches_no
+    FROM 
+        tester_data
+    JOIN 
+        vision_data ON tester_data.job_order_no = vision_data.job_order_no
+    JOIN
+        oee_metrics ON tester_data.job_order_no = oee_metrics.job_order_no
+    JOIN
+        job_order ON tester_data.job_order_no = job_order.job_order_no
+    WHERE
+        job_order.job_start_time >= $1
+        AND job_order.job_end_time <= $2
+        ${machineId ? " AND oee_metrics.machine_id = $3 " : ""}
 				`;
-		let values = [startTime, endTime];
+		let values = [startDateWithTZ, endDateWithTZ];
 		if (machineId) {
 			values.push(machineId);
 		}
@@ -101,74 +54,115 @@ router.get("/performanceBarChart", async (req, res) => {
 	}
 });
 
-router.get("/performanceDoughnutChart", async (req, res) => {
+router.get("/qualityDoughnut", async (req, res) => {
 	try {
 		const { startTime, endTime, machineId } = req.query;
-		let query = `SELECT AVG(daily_performance) AS performance
-			FROM (
-			SELECT DATE(timestamp) AS date,
-					AVG(performance) AS daily_performance
-			FROM oee_calculated
-			WHERE timestamp >= $1 AND timestamp < $2
-			${machineId ? "AND machine_id = $3" : ""}
-			GROUP BY DATE(timestamp)
-			) AS daily_performance_summary`;
-		let values = [startTime, endTime];
+		const query = `
+        SELECT 
+    (total_good_no + total_pass_no) AS good,
+    (total_fail_live_no + total_fail_neutral_no + total_fail_earth_no + 
+    total_fail_livexneutral_no + total_fail_neutralxearth_no + 
+    total_fail_earthxlive_no + total_short_when_off_no + total_flow_mark_no +
+    total_burr_no + total_colour_uneven_no + total_colour_no + total_scratches_no) AS bad
+FROM (
+    SELECT
+        SUM(vision_data.good_no) AS total_good_no,
+        SUM(tester_data.pass_no) AS total_pass_no,
+        SUM(tester_data.fail_live_no) AS total_fail_live_no,
+        SUM(tester_data.fail_neutral_no) AS total_fail_neutral_no,
+        SUM(tester_data.fail_earth_no) AS total_fail_earth_no,
+        SUM(tester_data.fail_livexneutral_no) AS total_fail_livexneutral_no,
+        SUM(tester_data.fail_neutralxearth_no) AS total_fail_neutralxearth_no,
+        SUM(tester_data.fail_earthxlive_no) AS total_fail_earthxlive_no,
+        SUM(tester_data.short_when_off_no) AS total_short_when_off_no,
+        SUM(vision_data.flow_mark_no) AS total_flow_mark_no,
+        SUM(vision_data.burr_no) AS total_burr_no,
+        SUM(vision_data.colour_uneven_no) AS total_colour_uneven_no,
+        SUM(vision_data.colour_no) AS total_colour_no,
+        SUM(vision_data.scratches_no) AS total_scratches_no
+    FROM 
+        tester_data
+    JOIN 
+        vision_data ON tester_data.job_order_no = vision_data.job_order_no
+    JOIN
+        oee_metrics ON tester_data.job_order_no = oee_metrics.job_order_no
+    JOIN
+        job_order ON tester_data.job_order_no = job_order.job_order_no
+    WHERE
+        job_order.job_start_time >= $1
+        AND job_order.job_end_time <= $2
+        ${machineId ? "AND oee_metrics.machine_id = $3" : ""}
+) AS subquery;
+
+      `;
+		const values = [startTime, endTime];
 		if (machineId) {
 			values.push(machineId);
 		}
 		const { rows } = await pool.query(query, values);
 
-		if (rows.length === 0 || rows[0].performance === null) {
-			return res.json(rows[0]);
-		}
-
-		let overallPerformance = rows[0].performance || 0;
-		let label = machineId ? machineId : "All Machine";
-		res.json({
-			machine_id: label,
-			performance: parseFloat(overallPerformance.toFixed(2)),
-		});
+		res.json(rows);
 	} catch (error) {
-		console.error("Error executing query:", error);
+		console.error("Error executing PostgreSQL query:", error);
 		res.status(500).json({ error: "An internal server error occurred" });
 	}
 });
 
-router.get("/performanceSummary", async (req, res) => {
+router.get("/qualitySummary", async (req, res) => {
 	try {
-		// less target
 		const { startTime, endTime, machineId } = req.query;
-		const parameter = [startTime, endTime, machineId];
-		const startDateWithTZ = moment(
-			`${startTime}`,
-			"YYYY-MM-DD HH:mm:ss.SSSSSS+08"
-		);
-		const endDateWithTZ = moment(
-			`${endTime}`,
-			"YYYY-MM-DD HH:mm:ss.SSSSSS+08"
-		);
-		const result = await pool.query(
-			`
-			SELECT o.machine_id, MAX(o.timestamp) as timestamp,
-			SUM (ma.output_qty/ma.duration_minutes) AS cycle_time,
-			SUM (ma.output_qty) AS sum_output_qty,
-			SUM (CASE WHEN ma.machine_status = '3' THEN ma.duration_minutes END) AS run_time,
-			AVG (o.performance) as performance
-			FROM oee_calculated o
-			LEFT JOIN machine_status ma
-			ON o.machine_id = ma.machine_id
-			WHERE 	
-				ma.status_start_time >= $1 
-				AND ma.status_end_time <= $2
-				${machineId ? "AND o.machine_id = $3" : ""}
-			GROUP BY o.machine_id, DATE_TRUNC('day', ma.status_start_time)
-			`,
-			machineId ? parameter : [startDateWithTZ, endDateWithTZ]
-		);
+		const query = `
+        SELECT 
+    machine_id,
+    job_order_no,
+    (total_good_no + total_pass_no) AS good,
+    (total_fail_live_no + total_fail_neutral_no + total_fail_earth_no + 
+    total_fail_livexneutral_no + total_fail_neutralxearth_no + 
+    total_fail_earthxlive_no + total_short_when_off_no + total_flow_mark_no +
+    total_burr_no + total_colour_uneven_no + total_colour_no + total_scratches_no) AS bad
+FROM (
+    SELECT
+        oee_metrics.machine_id,
+        tester_data.job_order_no,
+        SUM(vision_data.good_no) AS total_good_no,
+        SUM(tester_data.pass_no) AS total_pass_no,
+        SUM(tester_data.fail_live_no) AS total_fail_live_no,
+        SUM(tester_data.fail_neutral_no) AS total_fail_neutral_no,
+        SUM(tester_data.fail_earth_no) AS total_fail_earth_no,
+        SUM(tester_data.fail_livexneutral_no) AS total_fail_livexneutral_no,
+        SUM(tester_data.fail_neutralxearth_no) AS total_fail_neutralxearth_no,
+        SUM(tester_data.fail_earthxlive_no) AS total_fail_earthxlive_no,
+        SUM(tester_data.short_when_off_no) AS total_short_when_off_no,
+        SUM(vision_data.flow_mark_no) AS total_flow_mark_no,
+        SUM(vision_data.burr_no) AS total_burr_no,
+        SUM(vision_data.colour_uneven_no) AS total_colour_uneven_no,
+        SUM(vision_data.colour_no) AS total_colour_no,
+        SUM(vision_data.scratches_no) AS total_scratches_no
+    FROM 
+        tester_data
+    JOIN 
+        vision_data ON tester_data.job_order_no = vision_data.job_order_no
+    JOIN
+        oee_metrics ON tester_data.job_order_no = oee_metrics.job_order_no
+    JOIN
+        job_order ON tester_data.job_order_no = job_order.job_order_no
+    WHERE
+        job_order.job_start_time >= $1
+        AND job_order.job_end_time <= $2
+        ${machineId ? "AND oee_metrics.machine_id = $3" : ""}
+    GROUP BY
+        tester_data.job_order_no, vision_data.job_order_no, oee_metrics.machine_id
+) AS subquery;
+
+      `;
+		const values = [startTime, endTime];
+		if (machineId) {
+			values.push(machineId);
+		}
+		const { rows } = await pool.query(query, values);
 
 		const targetOutputMap = {};
-		for (let row of result.rows) {
+		for (let row of rows) {
 			const { machine_id } = row;
 
 			// Check if target output for this machine ID already exists in the map
@@ -183,38 +177,33 @@ router.get("/performanceSummary", async (req, res) => {
 				// Store the target output in the map
 				targetOutputMap[machine_id] = targetOutput;
 			}
+            row.targetOutput = targetOutputMap[machine_id];
 
-			// Append the target output to the current row
-			row.target = targetOutputMap[machine_id];
+			const query = `SELECT timestamp, quality FROM oee_calculated WHERE machine_id = $1`;
+			const qualityResult = await pool.query(query, [machine_id]);
+			const qualityrow = qualityResult.rows;
+			if (qualityrow.length > 0) {
+				row.date = qualityrow[0].timestamp;
+				row.quality = qualityrow[0].quality;
+			} else {
+				row.date = null;
+				row.quality = null;
+			}
+
+            const queryOutput = `SELECT output_qty FROM machine_status WHERE machine_id = $1`;
+			const outputResult = await pool.query(queryOutput, [machine_id]);
+			const outputrow = outputResult.rows;
+			if (outputrow.length > 0) {
+				row.output_qty = outputrow[0].output_qty;
+			} else {
+				row.output_qty = null;
+			}
 		}
 
-		res.json(result.rows);
+		res.json(rows);
 	} catch (error) {
-		console.error("Error executing query:", error);
+		console.error("Error executing PostgreSQL query:", error);
 		res.status(500).json({ error: "An internal server error occurred" });
-	}
-});
-
-// get overall taget and output
-router.get("/getOverallTargetOutput", async (req, res) => {
-	try {
-		const machineId = req.query.machineId;
-		const startDate = req.query.startDate;
-		const endDate = req.query.endDate;
-
-		const result = await getOverallTargetOutput(
-			startDate,
-			endDate,
-			machineId
-		);
-		res.json({
-			target: result.target,
-			current: result.current,
-			uphPercentageAverage: result.uphPercentageAverage,
-		});
-	} catch (err) {
-		console.error("Error executing query:", err.message);
-		res.status(500).send("Server Error");
 	}
 });
 const getOverallTargetOutput = async (startDate, endDate, machineId) => {

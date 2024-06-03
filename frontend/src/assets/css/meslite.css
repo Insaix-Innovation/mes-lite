@@ -27,7 +27,7 @@
         display: block;
     }
 }
-.toggled-date {
+.red-tile {
     background-color: red !important;
     color: white !important;
   }

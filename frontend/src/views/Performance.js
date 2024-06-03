@@ -1,28 +1,35 @@
-import Chart from "chart.js";
-import classnames from "classnames";
-import pflImage from "../assets/img/pfl.png";
 import { useState, useEffect } from "react";
-import { Bar, Line, Pie, Doughnut } from "react-chartjs-2";
+import { Bar, Doughnut } from "react-chartjs-2";
 import { barChartOptions, doughnutOptions } from "./chartOptions.js";
-import { formatDate, formatDateWithTimezone } from "./helper";
+import { formatDateWithTimezone } from "./helper";
 import {
-	Button,
 	Card,
 	CardBody,
 	CardHeader,
 	CardTitle,
 	Col,
 	Container,
-	Nav,
-	NavItem,
-	NavLink,
-	Progress,
 	Row,
 	Table,
 } from "reactstrap";
 import Pagination from "components/Pagination";
 
 const Performance = (props) => {
+	const [machineIdOptions, setMachineIdOption] = useState([]);
+	const fetchMachineIdOptions = async () => {
+		try {
+			const response = await fetch(
+				`http://localhost:5000/getMachineIdOptions`
+			);
+
+			if (!response.ok) {
+				throw new Error("Failed to fetch data");
+			}
+			const data = await response.json();
+			setMachineIdOption(data);
+			return;
+		} catch (e) {}
+	};
 
 	const getMalaysiaDate = () => {
 		const now = new Date();
@@ -57,12 +64,47 @@ const Performance = (props) => {
 
 	const handleFormSubmit = (e) => {
 		e.preventDefault();
+		fetchOverallTargetOutput();
+		fetchSummaryTableData();
+		fetchDoughnutData();
+		fetchBarChartData();
+		fetchOverallRunTime();
+		fetchOverallPerformance();
 	};
 
 	useEffect(() => {
 		setFromDate(today);
 		setToDate(today);
 	}, [today]);
+
+	//get overall target & output
+	const [overallTarget, setOverallTarget] = useState("");
+	const [overallOutput, setOverallOutput] = useState("");
+	const fetchOverallTargetOutput = async () => {
+		try {
+			const response = await fetch(
+				`http://localhost:5000/getOverallTargetOutput?machineId=${machineID}&startDate=${fromDate}&endDate=${toDate}`
+			);
+
+			if (!response.ok) {
+				throw new Error("Failed to fetch data");
+			}
+			const data = await response.json();
+			console.log(data);
+			if (data.target === undefined || data.target === null) {
+				setOverallTarget(`-`);
+			} else {
+				setOverallTarget(data.target);
+			}
+
+			if (data.current === undefined || data.current === null) {
+				setOverallOutput(`0`);
+			} else {
+				setOverallOutput(data.current);
+			}
+			return;
+		} catch (e) {}
+	};
 
 	//get Overall run time
 	const [overallRunTime, setOverallRunTime] = useState("");
@@ -150,7 +192,7 @@ const Performance = (props) => {
 			console.log(data.performance);
 			if (data.length === 0) {
 				setBarchartError("No data found");
-				return;
+				// return;
 			} else {
 				setBarchartError("");
 			}
@@ -172,7 +214,7 @@ const Performance = (props) => {
 					{
 						label: "Performance",
 						data: performance,
-						backgroundColor: "rgba(75, 192, 192, 0.6)",
+						backgroundColor: "rgba(166,167,247,1)",
 					},
 				],
 			});
@@ -190,23 +232,22 @@ const Performance = (props) => {
 	const [doughnutError, setDoughnutError] = useState("");
 	const doughnutOption = {
 		...doughnutOptions,
-			// tooltips: {
-			//   callbacks: {
-			// 	label: function (context) {
-			// 	  const value = context.x;
-			// 	  console.log(context)
-			// 	  return `${context.label}: ${value}%`;
-			// 	},
-			//   },
-			// },
-		  
+		// tooltips: {
+		//   callbacks: {
+		// 	label: function (context) {
+		// 	  const value = context.x;
+		// 	  console.log(context)
+		// 	  return `${context.label}: ${value}%`;
+		// 	},
+		//   },
+		// },
 	};
 	const fetchDoughnutData = async () => {
 		try {
 			let url = `http://localhost:5000/performanceDoughnutChart?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`;
 			const response = await fetch(url);
 			const data = await response.json();
-			if (data.length === 0) {
+			if (data.length === 0 || data.performance === null) {
 				setDoughnutError("No data found");
 				setDoughnutChartData({
 					labels: [],
@@ -216,16 +257,15 @@ const Performance = (props) => {
 			} else {
 				setDoughnutError("");
 			}
-
-			let labels = data.map((d) => d.machine_id);
-			let dataset = data.map((d) => d.performance * 100);
-			console.log(dataset);
+			let labels = [data.machine_id];
+			let dataset = [data.performance * 100];
 			setDoughnutChartData({
 				labels: labels,
 				datasets: [
 					{
 						label: "Overall Performance",
 						data: dataset,
+						backgroundColor: ["#525f7f"],
 					},
 				],
 			});
@@ -240,10 +280,10 @@ const Performance = (props) => {
 
 	const fetchSummaryTableData = async () => {
 		try {
-			let url = `http://localhost:5000/performanceSummary?startTime=${formatDateWithTimezone(fromDate)}&endTime=${formatDateWithTimezone(toDate)}&machineId=${machineID}`;
+			let url = `http://localhost:5000/performanceSummary?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`;
 			const response = await fetch(url);
 			const data = await response.json();
-			console.log(data)
+			console.log(data);
 			if (data.length === 0) {
 				setSummaryTableError("No data found");
 			} else {
@@ -257,12 +297,14 @@ const Performance = (props) => {
 	};
 
 	useEffect(() => {
+		fetchOverallTargetOutput();
 		fetchSummaryTableData();
 		fetchDoughnutData();
 		fetchBarChartData();
 		fetchOverallRunTime();
 		fetchOverallPerformance();
-	}, [fromDate, toDate, machineID]);
+		fetchMachineIdOptions();
+	}, []);
 
 	const options = {
 		timeZone: "Asia/Kuala_Lumpur",
@@ -330,15 +372,31 @@ const Performance = (props) => {
 										MachineID:{" "}
 									</label>
 
-									<input
-										type="text"
+									<select
 										id="machineID"
-										onChange={handleMachineIDChange}
 										value={machineID}
-										className="form-control mr-2 p-1"
-										style={{ height: "fit-content" }}
-										placeholder="machineID"
-									></input>
+										onChange={handleMachineIDChange}
+										style={{
+											border: "1px solid #cad1d7",
+											"border-radius": "5px",
+											padding: "3px 5px",
+											"font-size": "0.875rem",
+											color: "#8898aa",
+											"margin-right": "5px",
+										}}
+									>
+										<option value="">All</option>
+										{machineIdOptions.map((machineid) => {
+											return (
+												<option
+													key={machineid}
+													value={machineid}
+												>
+													{machineid}
+												</option>
+											);
+										})}
+									</select>
 
 									<input
 										type="submit"
@@ -372,7 +430,7 @@ const Performance = (props) => {
 													className="h2 font-weight-bold mb-0"
 													style={{ color: "white" }}
 												>
-													89,000
+													{overallTarget}
 												</span>
 											</div>
 										</Row>
@@ -394,7 +452,7 @@ const Performance = (props) => {
 													Overall Output
 												</CardTitle>
 												<span className="h2 font-weight-bold mb-0">
-													74,845
+													{overallOutput}
 												</span>
 											</div>
 										</Row>
@@ -450,23 +508,35 @@ const Performance = (props) => {
 							<Col md="8">
 								<Card>
 									<CardHeader>Performance Per Day</CardHeader>
-									<CardBody>
-										<Bar
-											data={barChartData}
-											options={barChartOption}
-										/>
-									</CardBody>
+									{barChartError === "" ? (
+										<CardBody>
+											<Bar
+												data={barChartData}
+												options={barChartOption}
+											/>
+										</CardBody>
+									) : (
+										<CardBody>
+											<div>{barChartError}</div>
+										</CardBody>
+									)}
 								</Card>
 							</Col>
 							<Col md="4">
 								<Card>
 									<CardHeader>Overall Performance</CardHeader>
-									<CardBody>
-										<Doughnut
-											data={doughnutData}
-											options={doughnutOption}
-										/>
-									</CardBody>
+									{doughnutError === "" ? (
+										<CardBody>
+											<Doughnut
+												data={doughnutData}
+												options={doughnutOptions}
+											/>
+										</CardBody>
+									) : (
+										<CardBody>
+											<div>{doughnutError}</div>
+										</CardBody>
+									)}
 								</Card>
 							</Col>
 						</Row>
@@ -501,32 +571,57 @@ const Performance = (props) => {
 													(data, index) => (
 														<tr key={index}>
 															<td>
-																{data.machine_id}
+																{
+																	data.machine_id
+																}
 															</td>
 															<td>
-															{new Date(
-																data.timestamp
-															).toLocaleString(
-																"en-MY",
-																options
-															)}</td>
-															<td>
-																{data.cycle_time}
+																{new Date(
+																	data.timestamp
+																).toLocaleString(
+																	"en-MY",
+																	options
+																)}
 															</td>
 															<td>
-																{data.target}
+																{
+																	data.cycle_time
+																}
 															</td>
 															<td>
-																{data.sum_output_qty}
+																{
+																	data.target
+																		.target
+																}
+															</td>
+															<td>
+																{
+																	data.sum_output_qty
+																}
 															</td>
 															<td>
 																{data.run_time}
 															</td>
 															<td>
-																{data.performance}
+																{
+																	data.performance
+																}
 															</td>
 														</tr>
 													)
+												)}
+												{summaryTableError !== "" && (
+													<tr>
+														<td
+															colSpan={7}
+															style={{
+																textAlign:
+																	"center",
+															}}
+														>
+															{summaryTableError}
+														</td>
+													</tr>
 												)}
 											</tbody>
 											<tr>

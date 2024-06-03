@@ -2,6 +2,20 @@ const express = require("express");
 const router = express.Router();
 const pool = require("./db");
 
+
+router.get("/getMachineIdOptions", async (req, res) =>{
+	try {
+		const result = await pool.query(
+			"SELECT machine_id FROM oee_metrics ORDER BY machine_id"
+		);
+		const machineIds = result.rows.map(row => row.machine_id);
+		res.json(machineIds);
+	} catch (error) {
+		console.error("Error executing query:", error);
+		res.status(500).json({ error: "An internal server error occurred" });
+	}
+});
+
 router.get("/availabilityDoughnut", async (req, res) => {
 	try {
 		const query = `
@@ -46,15 +60,23 @@ router.get("/getAll", async (req, res) => {
 
 router.get("/availabilityBarChart", async (req, res) => {
 	try {
+		const parameter = [req.query.startTime, req.query.endTime];
+		const machineIdQuery = "AND machine_id = $3";
+		const machineId = req.query.machineId;
+		if (machineId) {
+			parameter.push(machineId);
+		}
 		const result = await pool.query(
 			`
-			SELECT timestamp, availability
+			SELECT timestamp, AVG(availability) as availability
 			FROM oee_calculated
 			WHERE timestamp >= $1::timestamp
 			  AND timestamp <= $2::timestamp
+			  ${machineId ? machineIdQuery : ""}
+			GROUP BY timestamp
 			ORDER BY timestamp ASC
 			`,
-			[req.query.startTime, req.query.endTime]
+			parameter
 		);
 		res.json(result.rows);
 	} catch (error) {
@@ -90,7 +112,7 @@ router.get("/availabilitySummary", async (req, res) => {
                 o.timestamp AS "Date",
                 COALESCE(SUM(CASE WHEN m.machine_status = 3 THEN m.duration_minutes ELSE 0 END), 0) AS "TotalRunningTime",
                 COALESCE(SUM(CASE WHEN m.machine_status = 4 THEN m.duration_minutes ELSE 0 END), 0) AS "TotalDownTime",
-                o.availability AS "Availability"
+                AVG(o.availability) AS "Availability"
             FROM 
                 oee_calculated o
             LEFT JOIN 
@@ -98,7 +120,7 @@ router.get("/availabilitySummary", async (req, res) => {
             WHERE 
                 ${queryConditions}
             GROUP BY 
-                o.machine_id, o.timestamp, o.availability
+                o.machine_id, o.timestamp
             `,
 			queryParams
 		);
@@ -113,14 +135,6 @@ router.post("/updateOvertimeFlag", async (req, res) => {
 	try {
 		const { timestamp, overtimeFlag } = req.body;
 		console.log(timestamp, overtimeFlag);
-		// const currentTime = new Date();
-		// const isAllowed = currentTime.getHours() < 17
-		//     ? new Date(timestamp) >= currentTime
-		//     : new Date(timestamp) > currentTime;
-
-		// if (!isAllowed) {
-		//     return res.status(400).json({ error: "You are not allowed to update past dates or dates after 17:00." });
-		// }
 
 		const query = `
 		DO $$ 
@@ -144,10 +158,10 @@ router.post("/updateOvertimeFlag", async (req, res) => {
 	}
 });
 
-router.get("/getToggledDates", async (req, res) => {
+router.get("/getOvertimeFlag", async (req, res) => {
 	try {
 		const result = await pool.query(
-			"SELECT timestamp FROM aggregation_flag"
+			"SELECT timestamp, overtime_flag FROM aggregation_flag"
 		);
 		res.json(result.rows);
 	} catch (error) {
@@ -158,10 +172,18 @@ router.get("/getToggledDates", async (req, res) => {
 
 router.get("/getJobOrder", async (req, res) => {
 	try {
-		let parameter = [req.query.startTime, req.query.endTime];
-		const query = `SELECT * FROM public.job_order
-		WHERE job_start_time >= $1
-		AND job_end_time <= $2`;
+		const { startTime, endTime, machineId } = req.query;
+		let parameter = [startTime, endTime];
+		const query = `SELECT job_order.* 
+		FROM job_order
+		JOIN oee_metrics ON job_order.job_order_no = oee_metrics.job_order_no
+		WHERE job_order.job_start_time >= $1
+		AND job_order.job_end_time <= $2
+		${machineId ? " AND oee_metrics.machine_id = $3 " : ""}`;
+
+		if (machineId) {
+			parameter.push(machineId);
+		}
 		const result = await pool.query(query, parameter);
 
 		res.json(result.rows);
@@ -173,21 +195,47 @@ router.get("/getJobOrder", async (req, res) => {
 
 router.put("/updateJobOrder", async (req, res) => {
 	try {
-		const { job_order_no, planned_output, planned_duration_hrs, planned_uph } = req.body;
+		const {
+			job_order_no,
+			planned_output,
+			planned_duration_hrs,
+			planned_uph,
+		} = req.body;
 
-		if(planned_output != null){
+		if (planned_output != null) {
 			const query = `UPDATE job_order set planned_output = $1 where job_order_no = $2`;
 			await pool.query(query, [planned_output, job_order_no]);
-		} else if(planned_duration_hrs != null){
+		} else if (planned_duration_hrs != null) {
 			const query = `UPDATE job_order set planned_duration_hrs = $1 where job_order_no = $2`;
 			await pool.query(query, [planned_duration_hrs, job_order_no]);
-		} else if(planned_uph != null){
+		} else if (planned_uph != null) {
 			const query = `UPDATE job_order set planned_uph = $1 where job_order_no = $2`;
 			await pool.query(query, [planned_uph, job_order_no]);
 		}
 		res.json({ success: true });
 	} catch (error) {
 		console.error("Error updating job_order:", error);
+		res.status(500).json({ error: "An internal server error occurred" });
+	}
+});
+
+router.get("/getMachineStatusBarChart", async (req, res) => {
+	try {
+		const { startTime, endTime, machineId } = req.query;
+		let parameter = [startTime, endTime, machineId];
+		const query = `SELECT * FROM machine_status 
+		WHERE 
+			status_start_time >= $1
+			AND status_end_time <= $2
+			AND machine_id = $3
+		ORDER BY status_start_time
+		`;
+
+		const result = await pool.query(query, parameter);
+
+		res.json(result.rows);
+	} catch (error) {
+		console.error("Error executing query:", error);
 		res.status(500).json({ error: "An internal server error occurred" });
 	}
 });

@@ -1,19 +1,13 @@
 import {
-	Button,
 	Card,
 	CardBody,
 	CardHeader,
-	CardTitle,
 	Col,
 	Container,
-	Nav,
-	NavItem,
-	NavLink,
-	Progress,
 	Row,
 	Table,
 } from "reactstrap";
-import { Bar, Line, Pie, Doughnut, HorizontalBar } from "react-chartjs-2";
+import { Bar, Doughnut } from "react-chartjs-2";
 import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
@@ -21,45 +15,53 @@ import Pagination from "components/Pagination";
 import {
 	barChartOptions,
 	doughnutOptions,
-	horizontalBarOptions,
 	horizontalBarChartOpt,
-	barChartOptions2,
 } from "./chartOptions.js";
-import { formatDate, formatDateWithTimezone } from './helper.js';
+import { formatDate, formatDateWithTimezone } from "./helper.js";
 import Chart from "react-apexcharts";
 const Availability = (props) => {
 	const [dateSelect, setCalendarDateChange] = useState(new Date());
-	const [toggledDates, setToggledDates] = useState([]);
 	const [error, setError] = useState("");
-	const handleDateChange = (date) => {
-		setCalendarDateChange(date);
-		setError("");
-	};
 	const [flagData, setFlagData] = useState({});
-	useEffect(() => {
-		// Fetch toggled dates from the database on component mount
-		const fetchToggledDates = async () => {
-			try {
-				const response = await fetch(
-					"http://localhost:5000/getToggledDates"
-				);
-				const data = await response.json();
-				setToggledDates(data.map((d) => new Date(d.date)));
-				setFlagData(data.map((d) => d.overtime_flag));
-			} catch (error) {
-				console.error("Error fetching toggled dates:", error);
-			}
-		};
 
-		fetchToggledDates();
+	const getOvertimeFlag = async () => {
+		try {
+			const response = await fetch(
+				"http://localhost:5000/getOvertimeFlag"
+			);
+			const data = await response.json();
+			const flagData = data.reduce(
+				(acc, { timestamp, overtime_flag }) => {
+					acc[new Date(timestamp).toISOString().split("T")[0]] =
+						overtime_flag;
+					return acc;
+				},
+				{}
+			);
+			setFlagData(flagData);
+		} catch (error) {
+			console.error("Error fetching toggled dates:", error);
+		}
+	};
+	useEffect(() => {
+		getOvertimeFlag();
 	}, []);
+
+	const getTileClassName = ({ date, view }) => {
+		// console.log('ho')
+		if (view === "month") {
+			const dateString = date.toISOString().split("T")[0];
+			if (flagData[dateString] === false) {
+				return "red-tile";
+			}
+		}
+		return null;
+	};
 
 	const handleToggle = async (date) => {
 		setCalendarDateChange(date);
 		const formattedDate = formatDate(date);
-		const newFlagData = { ...flagData };
-		newFlagData[formattedDate] = !newFlagData[formattedDate];
-		setFlagData(newFlagData);
+		const dateString = date.toISOString().split("T")[0];
 		setError("");
 		const currentDate = new Date();
 		const currentTimeInMinutes =
@@ -73,15 +75,7 @@ const Availability = (props) => {
 			isFutureDate ||
 			(isToday && currentTimeInMinutes < toggleTimeLimit)
 		) {
-			// const index = toggledDates.findIndex(
-			// 	(d) => d.toDateString() === dateSelect.toDateString()
-			// );
-			// const newFlag = index === -1;
-			const flagEntry = toggledDates.find(
-				(entry) => entry.timestamp === formattedDate
-			);
-			// Toggle the overtime flag
-			const newOvertimeFlag = !flagEntry?.overtime_flag;
+			const newOvertimeFlag = !flagData[dateString];
 
 			try {
 				const response = await fetch(
@@ -101,31 +95,8 @@ const Availability = (props) => {
 				if (!response.ok) {
 					throw new Error("Failed to update the database");
 				}
-				setToggledDates((prevData) => {
-					const updatedData = [...prevData];
-					const dataIndex = updatedData.findIndex(
-						(entry) => entry.timestamp === formattedDate
-					);
-					if (dataIndex !== -1) {
-						updatedData[dataIndex].overtime_flag = newOvertimeFlag;
-					} else {
-						updatedData.push({
-							timestamp: formattedDate,
-							overtime_flag: newOvertimeFlag,
-						});
-					}
-					return updatedData;
-				});
-				// if (newFlag) {
-				// 	setToggledDates([...toggledDates, dateSelect]);
-				// } else {
-				// 	setToggledDates(
-				// 		toggledDates.filter(
-				// 			(d) =>
-				// 				d.toDateString() !== dateSelect.toDateString()
-				// 		)
-				// 	);
-				// }
+
+				getOvertimeFlag();
 			} catch (error) {
 				console.error("Error updating database:", error);
 				setError("Failed to update the database");
@@ -135,12 +106,6 @@ const Availability = (props) => {
 				"You can only toggle for today before 17:00 or for future dates."
 			);
 		}
-	};
-
-	const tileClassName = ({ date }) => {
-		const formattedDate = formatDate(date);
-		const flag = flagData[formattedDate];
-		return flag === false ? "toggled-date" : "";
 	};
 
 	const tileDisabled = ({ date, view }) => {
@@ -171,6 +136,45 @@ const Availability = (props) => {
 	}));
 
 	const horizontalChartOptions = horizontalBarChartOpt(series);
+
+	const [horizontalBarData, setHorizontalBarChartData] = useState({});
+
+	const fetchHorizontalBarData = async () => {
+		try {
+			// Fetch machine status data from the database
+			const response = await fetch(
+				`http://localhost:5000/getMachineStatusBarChart?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`
+			);
+			const machineStatusData = await response.json();
+			console.log(machineStatusData);
+			if(machineStatusData.length > 0){
+				const colors = {
+					0: "#ebebeb",
+					1: "#ffa64d",
+					2: "#ffea4a",
+					3: "#55cf4a",
+					4: "#ff2b0f",
+				};
+			
+				const series = machineStatusData.map(({ status_start_time, status_end_time, machine_status, duration_minutes }, index) => ({
+					name: `${machine_status}`,
+					data: [duration_minutes],
+					color: colors[machine_status],
+				}));
+				console.log(series)
+				setHorizontalBarChartData(series);
+			}
+
+		} catch (error) {
+			console.error("Error fetching machine status data:", error);
+		}
+	};
+	useEffect(() => {
+		fetchHorizontalBarData();
+	}, []);
+
+
+
 	const getMalaysiaDate = () => {
 		const now = new Date();
 		const utcTime = now.getTime() + now.getTimezoneOffset() * 6000;
@@ -181,7 +185,6 @@ const Availability = (props) => {
 	const [fromDate, setFromDate] = useState(today);
 	const [toDate, setToDate] = useState(today);
 	const [machineID, setMachineID] = useState("");
-	const [machineOption, setMachineOption] = useState("all");
 	const [doughnutError, setDoughnutError] = useState("");
 
 	// Handle date changes and ensure they don't exceed today's date
@@ -201,20 +204,17 @@ const Availability = (props) => {
 		}
 	};
 
-	const handleMachineIDOptionChange = (e) => {
-		setMachineOption(e.target.value);
-		if (e.target.value == "all") {
-			setMachineID("");
-		}
-	};
-
 	const handleMachineIDChange = (e) => {
 		setMachineID(e.target.value);
 	};
 
 	const handleFormSubmit = (e) => {
 		e.preventDefault();
+		fetchJobOrderData();
+		fetchSummaryData();
 		fetchData();
+		fetchBarChartData();
+		fetchHorizontalBarData();
 	};
 
 	useEffect(() => {
@@ -222,16 +222,30 @@ const Availability = (props) => {
 		setToDate(today);
 	}, [today]);
 
-	const [doughnutData, setChartData] = useState({
+	const [machineIdOptions, setMachineIdOption] = useState([]);
+	const fetchMachineIdOptions = async () => {
+		try {
+			const response = await fetch(
+				`http://localhost:5000/getMachineIdOptions`
+			);
+
+			if (!response.ok) {
+				throw new Error("Failed to fetch data");
+			}
+			const data = await response.json();
+			setMachineIdOption(data);
+			return;
+		} catch (e) {}
+	};
+
+	const [doughnutData, setDoughnutChartData] = useState({
 		labels: [],
 		datasets: [],
 	});
 
 	const fetchData = async () => {
 		try {
-			let url = `http://localhost:5000/availabilityDoughnut?startTime=${formatDateWithTimezone(
-				fromDate
-			)}&endTime=${formatDateWithTimezone(toDate)}`;
+			let url = `http://localhost:5000/availabilityDoughnut?startTime=${fromDate}&endTime=${toDate}`;
 			if (machineID) {
 				url += `&machineId=${machineID}`;
 			}
@@ -275,7 +289,7 @@ const Availability = (props) => {
 				}
 			});
 
-			setChartData({
+			setDoughnutChartData({
 				labels: labels,
 				datasets: [
 					{
@@ -300,7 +314,7 @@ const Availability = (props) => {
 	const fetchBarChartData = async () => {
 		try {
 			const response = await fetch(
-				`http://localhost:5000/availabilityBarChart?startTime=${fromDate}&endTime=${toDate}`
+				`http://localhost:5000/availabilityBarChart?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`
 			);
 
 			if (!response.ok) {
@@ -331,7 +345,7 @@ const Availability = (props) => {
 					{
 						label: "Availability",
 						data: availability,
-						backgroundColor: "rgba(75, 192, 192, 0.6)",
+						backgroundColor: "rgba(166,167,247,1)",
 					},
 				],
 			});
@@ -381,9 +395,7 @@ const Availability = (props) => {
 	const fetchJobOrderData = async () => {
 		try {
 			const response = await fetch(
-				`http://localhost:5000/getJobOrder?startTime=${formatDateWithTimezone(
-					fromDate
-				)}&endTime=${formatDateWithTimezone(toDate)}`
+				`http://localhost:5000/getJobOrder?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`
 			);
 			if (!response.ok) {
 				throw new Error("Failed to fetch data");
@@ -404,7 +416,8 @@ const Availability = (props) => {
 		fetchSummaryData();
 		fetchData();
 		fetchBarChartData();
-	}, [fromDate, toDate, machineID]);
+		fetchMachineIdOptions();
+	}, []);
 
 	//availability summary
 	const [currentPage, setCurrentPage] = useState(1);
@@ -550,25 +563,30 @@ const Availability = (props) => {
 								</label>
 								<select
 									id="machineID"
-									value={machineOption}
-									onChange={handleMachineIDOptionChange}
+									value={machineID}
+									onChange={handleMachineIDChange}
+									style={{
+										border: "1px solid #cad1d7",
+										"border-radius": "5px",
+										padding: "3px 5px",
+										"font-size": "0.875rem",
+										color: "#8898aa",
+										"margin-right": "5px",
+									}}
 								>
-									<option value="all">All</option>
-									<option value="specific">
-										Specific Machine ID
-									</option>
+									<option value="">All</option>
+									{machineIdOptions.map((machineid) => {
+										return (
+											<option
+												key={machineid}
+												value={machineid}
+											>
+												{machineid}
+											</option>
+										);
+									})}
 								</select>
-								{machineOption === "specific" && (
-									<input
-										type="text"
-										id="machineID"
-										onChange={handleMachineIDChange}
-										value={machineID}
-										className="form-control mr-2 p-1"
-										style={{ height: "fit-content" }}
-										placeholder="machineID"
-									></input>
-								)}
+
 								<input
 									type="submit"
 									value={"go"}
@@ -712,7 +730,7 @@ const Availability = (props) => {
 									<Calendar
 										className="mx-auto"
 										onClickDay={handleToggle}
-										tileClassName={tileClassName}
+										tileClassName={getTileClassName}
 										tileDisabled={tileDisabled}
 										value={dateSelect}
 									/>
@@ -950,13 +968,14 @@ const Availability = (props) => {
 													horizontalChartOptions.options
 												}
 												series={
-													horizontalChartOptions
-														.options.series
+													horizontalChartOptions.options.series
+													// horizontalBarData
 												}
 												type="bar"
 												height={150}
 											/>
 										</div>
+										
 									</CardBody>
 								</Card>
 							</div>

@@ -1,5 +1,6 @@
 const availability = require("./availability.js");
 const performance = require("./performance.js");
+const quality = require("./quality.js");
 const express = require("express");
 const testRoutes = require("./test");
 const summary = require("./summary.js");
@@ -17,6 +18,7 @@ app.use(summary);
 app.use(machine);
 app.use(availability);
 app.use(performance);
+app.use(quality);
 
 app.listen(5000, '0.0.0.0',() => {
 	console.log("server has started on port 5000");
