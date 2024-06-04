@@ -57,17 +57,17 @@ const AdminNavbar = (props) => {
 									<span className="avatar avatar-sm rounded-circle">
 										<img
 											alt="..."
-											src={require("../../assets/img/theme/team-4-800x800.jpg")}
+											src={"https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}
 										/>
 									</span>
 									<Media className="ml-2 d-none d-lg-block">
 										<span className="mb-0 text-sm font-weight-bold text-dark">
-											Jessica Jones
+											Kevin Goh
 										</span>
 									</Media>
 								</Media>
 							</DropdownToggle>
-							<DropdownMenu className="dropdown-menu-arrow" right>
+							{/* <DropdownMenu className="dropdown-menu-arrow" right>
 								<DropdownItem
 									className="noti-title"
 									header
@@ -113,7 +113,7 @@ const AdminNavbar = (props) => {
 									<i className="ni ni-user-run" />
 									<span>Logout</span>
 								</DropdownItem>
-							</DropdownMenu>
+							</DropdownMenu> */}
 						</UncontrolledDropdown>
 					</Nav>
 				</Container>
