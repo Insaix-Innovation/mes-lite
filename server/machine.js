@@ -74,8 +74,11 @@ router.get("/getMachineLive", async (req, res) => {
 
         const query = `
             SELECT 
-                (SELECT job_order_no FROM public.machine_live_data WHERE machine_id = $1 AND baseline = false) -
-                (SELECT job_order_no FROM public.machine_live_data WHERE machine_id = $1 AND baseline = true) 
+                (SELECT job_order_no
+            FROM public.machine_live_data
+            WHERE machine_id = $1
+            ORDER BY timestamp DESC
+            LIMIT 1) 
             AS job_order_difference,
             (SELECT machine_uptime_hr FROM public.machine_live_data WHERE machine_id = $1 AND baseline = false) -
                 (SELECT machine_uptime_hr FROM public.machine_live_data WHERE machine_id = $1 AND baseline = true) 
@@ -440,7 +443,7 @@ router.get('/calculateMachineUPHdropDown', async (req, res) => {
         res.json({
             target: overallUph,
             current: currentUph,
-            uphPercentageMachine:uphPercentage
+            uphPercentageMachine: uphPercentage
         });
     } catch (err) {
         console.error("Error executing query:", err.message);
@@ -523,7 +526,7 @@ router.get('/calculateMachineOEEdropDown', async (req, res) => {
         }
 
         const overallUph = plannedUph1 + plannedUph2 + plannedUph3 + plannedUph4;
-        
+
         // Convert startTime and endTime to appropriate formats
         const formattedStartTime = moment(startTime).format('YYYY-MM-DD HH:mm:ss');
         const formattedEndTime = moment(endTime).format('YYYY-MM-DD HH:mm:ss');
