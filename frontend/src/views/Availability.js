@@ -7,6 +7,7 @@ import {
 	Row,
 	Table,
 } from "reactstrap";
+import host from "./host.js";
 import { Bar, Doughnut } from "react-chartjs-2";
 import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
@@ -20,6 +21,8 @@ import {
 import { formatDate, formatDateWithTimezone } from "./helper.js";
 import Chart from "react-apexcharts";
 const Availability = (props) => {
+	const localhost = host.localhost;
+
 	const [dateSelect, setCalendarDateChange] = useState(new Date());
 	const [error, setError] = useState("");
 	const [flagData, setFlagData] = useState({});
@@ -27,7 +30,7 @@ const Availability = (props) => {
 	const getOvertimeFlag = async () => {
 		try {
 			const response = await fetch(
-				"http://localhost:5000/getOvertimeFlag"
+				`http://${localhost}:5000/getOvertimeFlag`
 			);
 			const data = await response.json();
 			const flagData = data.reduce(
@@ -79,7 +82,7 @@ const Availability = (props) => {
 
 			try {
 				const response = await fetch(
-					"http://localhost:5000/updateOvertimeFlag",
+					`http://${localhost}:5000/updateOvertimeFlag`,
 					{
 						method: "POST",
 						headers: {
@@ -143,7 +146,7 @@ const Availability = (props) => {
 		try {
 			// Fetch machine status data from the database
 			const response = await fetch(
-				`http://localhost:5000/getMachineStatusBarChart?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`
+				`http://${localhost}:5000/getMachineStatusBarChart?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`
 			);
 			const machineStatusData = await response.json();
 			console.log(machineStatusData);
@@ -226,7 +229,7 @@ const Availability = (props) => {
 	const fetchMachineIdOptions = async () => {
 		try {
 			const response = await fetch(
-				`http://localhost:5000/getMachineIdOptions`
+				`http://${localhost}:5000/getMachineIdOptions`
 			);
 
 			if (!response.ok) {
@@ -245,7 +248,7 @@ const Availability = (props) => {
 
 	const fetchData = async () => {
 		try {
-			let url = `http://localhost:5000/availabilityDoughnut?startTime=${fromDate}&endTime=${toDate}`;
+			let url = `http://${localhost}:5000/availabilityDoughnut?startTime=${fromDate}&endTime=${toDate}`;
 			if (machineID) {
 				url += `&machineId=${machineID}`;
 			}
@@ -314,7 +317,7 @@ const Availability = (props) => {
 	const fetchBarChartData = async () => {
 		try {
 			const response = await fetch(
-				`http://localhost:5000/availabilityBarChart?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`
+				`http://${localhost}:5000/availabilityBarChart?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`
 			);
 
 			if (!response.ok) {
@@ -369,7 +372,7 @@ const Availability = (props) => {
 	const fetchSummaryData = async () => {
 		try {
 			const response = await fetch(
-				`http://localhost:5000/availabilitySummary?startTime=${fromDate}&endTime=${toDate}&startTimeTS=${formatDateWithTimezone(
+				`http://${localhost}:5000/availabilitySummary?startTime=${fromDate}&endTime=${toDate}&startTimeTS=${formatDateWithTimezone(
 					fromDate
 				)}&endTimeTS=${formatDateWithTimezone(
 					toDate
@@ -395,7 +398,7 @@ const Availability = (props) => {
 	const fetchJobOrderData = async () => {
 		try {
 			const response = await fetch(
-				`http://localhost:5000/getJobOrder?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`
+				`http://${localhost}:5000/getJobOrder?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`
 			);
 			if (!response.ok) {
 				throw new Error("Failed to fetch data");
@@ -474,7 +477,7 @@ const Availability = (props) => {
 	const handleSave = async (job_order_no, column) => {
 		try {
 			const response = await fetch(
-				`http://localhost:5000/updateJobOrder`,
+				`http://${localhost}:5000/updateJobOrder`,
 				{
 					method: "PUT",
 					headers: {

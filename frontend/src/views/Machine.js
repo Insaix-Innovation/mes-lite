@@ -97,13 +97,13 @@ const Machine = (props) => {
 		availability: 0,
 		performance: 0,
 		quality: 0,
-		oee:0
+		oee: 0
 	});
 
 	const doughnutData = {
 		datasets: [
 			{
-				data: [100-machineOEEData.oee, machineOEEData.oee],
+				data: [100 - machineOEEData.oee, machineOEEData.oee],
 				backgroundColor: ["#051548", "#33FAFF"], // Blue for UPH, light gray for remaining
 			},
 		],
@@ -140,6 +140,21 @@ const Machine = (props) => {
 	// 	};
 	// 	fetchData();
 	// }, []);
+	const [machineIdOptions, setMachineIdOption] = useState([]);
+	const fetchMachineIdOptions = async () => {
+		try {
+			const response = await fetch(
+				`http://${localhost}:5000/getMachineIdOptions`
+			);
+
+			if (!response.ok) {
+				throw new Error("Failed to fetch data");
+			}
+			const data = await response.json();
+			setMachineIdOption(data);
+			return;
+		} catch (e) { }
+	};
 
 	const fetchData = async (machineId) => {
 		try {
@@ -192,6 +207,7 @@ const Machine = (props) => {
 
 	useEffect(() => {
 		fetchData(selectedMachine);
+		fetchMachineIdOptions();
 	}, [selectedMachine]);
 
 	useEffect(() => {
@@ -232,8 +248,16 @@ const Machine = (props) => {
 													onChange={handleMachineChange}
 													value={selectedMachine}
 												>
-													<option value="M01">M01</option>
-													<option value="M02">M02</option>
+													{machineIdOptions.map((machineid) => {
+														return (
+															<option
+																key={machineid}
+																value={machineid}
+															>
+																{machineid}
+															</option>
+														);
+													})}
 												</select>
 											</h2>
 										</Col>
@@ -288,8 +312,8 @@ const Machine = (props) => {
 									<Row className="align-items-center">
 										<div className="col">
 											<h3 className="mb-0">
-												Assets Info 
-											</h3> 
+												Assets Info
+											</h3>
 										</div>
 
 										<div

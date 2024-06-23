@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Bar, Doughnut } from "react-chartjs-2";
+import host from "./host.js";
 import { barChartOptions, doughnutOptions } from "./chartOptions.js";
 import { formatDateWithTimezone } from "./helper";
 import {
@@ -15,11 +16,13 @@ import {
 import Pagination from "components/Pagination";
 
 const Performance = (props) => {
+	const localhost = host.localhost;
+
 	const [machineIdOptions, setMachineIdOption] = useState([]);
 	const fetchMachineIdOptions = async () => {
 		try {
 			const response = await fetch(
-				`http://localhost:5000/getMachineIdOptions`
+				`http://${localhost}:5000/getMachineIdOptions`
 			);
 
 			if (!response.ok) {
@@ -83,7 +86,7 @@ const Performance = (props) => {
 	const fetchOverallTargetOutput = async () => {
 		try {
 			const response = await fetch(
-				`http://localhost:5000/getOverallTargetOutput?machineId=${machineID}&startDate=${fromDate}&endDate=${toDate}`
+				`http://${localhost}:5000/getOverallTargetOutput?machineId=${machineID}&startDate=${fromDate}&endDate=${toDate}`
 			);
 
 			if (!response.ok) {
@@ -111,7 +114,7 @@ const Performance = (props) => {
 	const fetchOverallRunTime = async () => {
 		try {
 			const response = await fetch(
-				`http://localhost:5000/getOverallRunTime?startTime=${formatDateWithTimezone(
+				`http://${localhost}:5000/getOverallRunTime?startTime=${formatDateWithTimezone(
 					fromDate
 				)}&endTime=${formatDateWithTimezone(
 					toDate
@@ -140,7 +143,7 @@ const Performance = (props) => {
 	const fetchOverallPerformance = async () => {
 		try {
 			const response = await fetch(
-				`http://localhost:5000/getOverallPerformance?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`
+				`http://${localhost}:5000/getOverallPerformance?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`
 			);
 
 			if (!response.ok) {
@@ -182,7 +185,7 @@ const Performance = (props) => {
 	const fetchBarChartData = async () => {
 		try {
 			const response = await fetch(
-				`http://localhost:5000/performanceBarChart?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`
+				`http://${localhost}:5000/performanceBarChart?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`
 			);
 
 			if (!response.ok) {
@@ -244,7 +247,7 @@ const Performance = (props) => {
 	};
 	const fetchDoughnutData = async () => {
 		try {
-			let url = `http://localhost:5000/performanceDoughnutChart?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`;
+			let url = `http://${localhost}:5000/performanceDoughnutChart?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`;
 			const response = await fetch(url);
 			const data = await response.json();
 			if (data.length === 0 || data.performance === null) {
@@ -280,7 +283,7 @@ const Performance = (props) => {
 
 	const fetchSummaryTableData = async () => {
 		try {
-			let url = `http://localhost:5000/performanceSummary?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`;
+			let url = `http://${localhost}:5000/performanceSummary?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`;
 			const response = await fetch(url);
 			const data = await response.json();
 			console.log(data);

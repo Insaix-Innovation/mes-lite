@@ -1,6 +1,8 @@
 import Chart from "chart.js";
 import classnames from "classnames";
 import pflImage from "../assets/img/pfl.png";
+import host from "./host.js";
+
 import { useState, useEffect } from "react";
 import { Bar, Line, Pie, Doughnut } from "react-chartjs-2";
 import Pagination from "components/Pagination";
@@ -22,11 +24,13 @@ import {
 } from "reactstrap";
 
 const Quality = (props) => {
+	const localhost = host.localhost;
+
 	const [machineIdOptions, setMachineIdOption] = useState([]);
 	const fetchMachineIdOptions = async () => {
 		try {
 			const response = await fetch(
-				`http://localhost:5000/getMachineIdOptions`
+				`http://${localhost}:5000/getMachineIdOptions`
 			);
 
 			if (!response.ok) {
@@ -96,7 +100,7 @@ const Quality = (props) => {
 	const fetchBarChartData = async () => {
 		try {
 			const response = await fetch(
-				`http://localhost:5000/rejectsParetoBarChart?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`
+				`http://${localhost}:5000/rejectsParetoBarChart?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`
 			);
 
 			if (!response.ok) {
@@ -158,7 +162,7 @@ const Quality = (props) => {
 	const [summaryTableError, setSummaryTableError] = useState("");
 	const fetchSummaryTableData = async () => {
 		try {
-			let url = `http://localhost:5000/qualitySummary?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`;
+			let url = `http://${localhost}:5000/qualitySummary?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`;
 			const response = await fetch(url);
 			const data = await response.json();
 			console.log(data);
@@ -180,7 +184,7 @@ const Quality = (props) => {
 	const [doughnutError, setDoughnutError] = useState("");
 	const fetchDoughnutData = async () => {
 		try {
-			let url = `http://localhost:5000/qualityDoughnut?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`;
+			let url = `http://${localhost}:5000/qualityDoughnut?startTime=${fromDate}&endTime=${toDate}&machineId=${machineID}`;
 			const response = await fetch(url);
 			const data = await response.json();
 			if (data.length === 0) {

@@ -6,7 +6,7 @@ const pool = require("./db");
 router.get("/getMachineIdOptions", async (req, res) =>{
 	try {
 		const result = await pool.query(
-			"SELECT machine_id FROM oee_metrics ORDER BY machine_id"
+			"SELECT DISTINCT machine_id FROM oee_metrics ORDER BY machine_id"
 		);
 		const machineIds = result.rows.map(row => row.machine_id);
 		res.json(machineIds);
