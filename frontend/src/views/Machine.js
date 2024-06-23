@@ -17,8 +17,8 @@ import moment from "moment";
 const Machine = (props) => {
 	const localhost = host.localhost;
 
-	// const today = moment().format('YYYY-MM-DD');
-	const today = moment().subtract(1, 'days').format('YYYY-MM-DD');
+	const today = moment().format('YYYY-MM-DD');
+	// const today = moment().subtract(1, 'days').format('YYYY-MM-DD');
 	const [fromDate, setFromDate] = useState(today);
 	const [toDate, setToDate] = useState(today);
 

@@ -381,7 +381,7 @@ const Summary = (props) => {
 												<tr key={machine.machine_id}>
 													<td style={{ width: "33%" }}>
 														<h6 className="" style={{ fontSize: '15px' }}>
-															Machine {machine.machine_id}: {machine.uph !== null ? machine.uph : 'N/A'}
+															{machine.machine_id}: {machine.uph !== null ? machine.uph : 'N/A'}
 														</h6>
 													</td>
 												</tr>

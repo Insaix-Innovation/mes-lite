@@ -28,8 +28,8 @@ router.get("/getOverview", async (req, res) => {
 
         // Get today's date
         const today = new Date();
-        const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()-1, 0, 0, 0);
-        const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()-1, 23, 59, 59);
+        const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
+        const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
 
         // Query to get total output for today
         const queryTotalOutput = `
@@ -109,8 +109,8 @@ router.get('/calculateOverallUPH', async (req, res) => {
         const operatingHoursStart = defaultValuesResult.rows[0].operating_hours_start;
         const operatingHoursEnd = defaultValuesResult.rows[0].operating_hours_end;
 
-        // const today = moment().format('YYYY-MM-DD');
-        const today = moment().subtract(1, 'days').format('YYYY-MM-DD');
+        const today = moment().format('YYYY-MM-DD');
+        // const today = moment().subtract(1, 'days').format('YYYY-MM-DD');
         const operatingHoursStartTime = moment(`${today} ${operatingHoursStart}`, 'YYYY-MM-DD HH:mm:ss');
         const operatingHoursEndTime = moment(`${today} ${operatingHoursEnd}`, 'YYYY-MM-DD HH:mm:ss');
 
@@ -214,8 +214,7 @@ router.get('/calculateMachineUPH', async (req, res) => {
         const operatingHoursStart = defaultValuesResult.rows[0].operating_hours_start;
         const operatingHoursEnd = defaultValuesResult.rows[0].operating_hours_end;
 
-        // const today = moment().format('YYYY-MM-DD');
-        const today = moment().subtract(1, 'days').format('YYYY-MM-DD');
+        const today = moment().format('YYYY-MM-DD');
         const operatingHoursStartTime = moment(today + ' ' + operatingHoursStart, 'YYYY-MM-DD HH:mm:ss');
         const operatingHoursEndTime = moment(today + ' ' + operatingHoursEnd, 'YYYY-MM-DD HH:mm:ss');
 
@@ -256,9 +255,15 @@ router.get('/calculateMachineUPH', async (req, res) => {
         `;
         const machineDurationResult = await pool.query(machineDurationQuery, [operatingHoursStartTime.format('YYYY-MM-DD HH:mm:ss'), operatingHoursEndTime.format('YYYY-MM-DD HH:mm:ss')]);
         console.log(machineDurationResult.rows);
-        const machineUphData = machineOutputResult.rows.map((outputRow, index) => {
-            const durationRow = machineDurationResult.rows[index];
-            const machineUph = Math.round(outputRow.output_difference / durationRow.total_duration);
+
+        const machineDurationMap = machineDurationResult.rows.reduce((map, row) => {
+            map[row.machine_id] = row.total_duration;
+            return map;
+        }, {});
+
+        const machineUphData = machineOutputResult.rows.map((outputRow) => {
+            const totalDuration = machineDurationMap[outputRow.machine_id];
+            const machineUph = totalDuration ? Math.round(outputRow.output_difference / totalDuration) : 0;
             return {
                 machine_id: outputRow.machine_id,
                 uph: machineUph
@@ -275,6 +280,7 @@ router.get('/calculateMachineUPH', async (req, res) => {
         res.status(500).send("Server Error");
     }
 });
+
 
 router.get("/getMachineStatus", async (req, res) => {
     try {
