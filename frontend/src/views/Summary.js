@@ -14,6 +14,7 @@ import pflImage from "../assets/img/pfl.png";
 import host from './host.js';
 // core components
 import { doughnutOptions } from "./chartOptions.js";
+import authService from '../authService';
 
 const Summary = (props) => {
 	const localhost = host.localhost;

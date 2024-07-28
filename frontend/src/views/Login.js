@@ -2,21 +2,24 @@ import { Button, Form, FormGroup, Input, Label } from "reactstrap";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/img/brand/logo.png";
+import authService from "../authService";
 
 const Login = () => {
 	const navigate = useNavigate();
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
-
-	const handleSubmit = (e) => {
+	const [error, setError] = useState("");
+	const handleSubmit = async (e) => {
 		e.preventDefault();
-		// You can handle form submission here
 		console.log("Email:", email);
 		console.log("Password:", password);
-
-		navigate("/admin/overview");
+		try {
+			await authService.login(email, password);
+			navigate('/admin/overview');
+		} catch (err) {
+			setError('Invalid email or password');
+		}
 	};
-
 	return (
 		<>
 			<div className="pt-7">
@@ -74,6 +77,17 @@ const Login = () => {
 									}
 								/>
 							</FormGroup>
+							{error && (
+								<div
+									style={{
+										color: "red",
+										marginBottom: "15px",
+										textAlign: "center",
+									}}
+								>
+									{error}
+								</div>
+							)}
 
 							<Button
 								type="submit"
