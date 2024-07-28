@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/img/brand/logo.png";
 import authService from "../authService";
+import logo from "../assets/img/brand/ColorInsaixLogo.jpg";
 
 const Login = () => {
 	const navigate = useNavigate();
@@ -22,26 +23,27 @@ const Login = () => {
 	};
 	return (
 		<>
-			<div className="pt-7">
+			<div className="pt-7 ">
 				<div
 					className="mx-auto d-flex flex-wrap justify-content-center align-items-center"
 					style={{
 						backgroundColor: "rgba(255, 255, 255, 0.5)",
-						width: "65%",
+						//width: "65%",
 						maxWidth: "1000px",
 						padding: "30px 50px",
 						height: "500px",
 					}}
 				>
 					<div
-						className="d-flex justify-content-center align-items-center"
+						className="justify-content-center align-items-center d-none d-md-flex"
 						style={{
 							flex: 1.5,
-							height: "100%",
+							height: "50%",
 							backgroundImage: `url(${logo})`, // Set the image as background
 							backgroundSize: "cover", // Cover the whole div
 							backgroundPosition: "center", // Center the background image
 							border: "solid 1px",
+							display:"none"
 						}}
 					></div>
 					<div
@@ -56,7 +58,7 @@ const Login = () => {
 						<h1 className="mx-auto py-2">Sign In</h1>
 						<Form
 							onSubmit={handleSubmit}
-							className="d-flex flex-column"
+							className="d-flex flex-column "
 						>
 							<FormGroup controlId="formBasicEmail">
 								<Input

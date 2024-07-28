@@ -333,7 +333,7 @@ const Performance = (props) => {
 					<div className="header-body">
 						<div className="fromToDateSelection">
 							<div
-								className="mb-3 mx-auto p-2"
+								className="mb-3 mx-auto p-2 w-md-50 w-100"
 								style={{
 									width: "fit-content",
 									backgroundColor: "rgb(225 236 255)",
@@ -341,7 +341,7 @@ const Performance = (props) => {
 								}}
 							>
 								<form
-									className="text-center d-flex align-items-center"
+									className="text-center d-flex flex-column flex-md-row align-items-center "
 									onSubmit={handleFormSubmit}
 								>
 									<label for="fromDate" className="mb-0 mr-2">
@@ -387,6 +387,7 @@ const Performance = (props) => {
 											color: "#8898aa",
 											"margin-right": "5px",
 										}}
+										className="w-md-50 w-100"
 									>
 										<option value="">All</option>
 										{machineIdOptions.map((machineid) => {
@@ -404,7 +405,7 @@ const Performance = (props) => {
 									<input
 										type="submit"
 										value={"go"}
-										className="btn btn-primary py-1 px-2"
+										className="btn btn-primary py-1 px-2 w-md-50 w-100"
 									/>
 								</form>
 							</div>
